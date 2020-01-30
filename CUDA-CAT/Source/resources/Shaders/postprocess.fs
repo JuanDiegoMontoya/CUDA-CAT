@@ -1,3 +1,14 @@
+#version 450 core
+
+//layout (location = 0) out vec4 FragColor;
+out vec4 FragColor;
+in vec2 TexCoords;
+uniform sampler2D colorTex;
+uniform bool sharpenFilter;
+uniform bool blurFilter;
+uniform bool edgeDetection;
+uniform bool chromaticAberration;
+
 #define ID2D(x, y, w) (width * row + col)
 const float offset = 1.0 / 1000.0;
 

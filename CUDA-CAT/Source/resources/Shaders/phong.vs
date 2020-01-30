@@ -1,4 +1,67 @@
-# of active lights
+#version 450 core
+// START NORMAL VERTEX STUFF
+layout (location = 0) in vec3 aPos;
+layout (location = 1) in vec3 aNormal;
+layout (location = 2) in vec2 aTexCoords;
+out vec3 vNormal;
+out vec3 vPos;
+out vec2 vTexCoords;
+out vec4 vGouraudColor;
+uniform mat4 u_model;
+uniform mat4 u_view;
+uniform mat4 u_proj;
+
+// END NORMAL VERTEX STUFF
+
+// START LIGHTING STUFF
+#define LIGHT_POINT 0
+#define LIGHT_DIR 1
+#define LIGHT_SPOT 2
+#define MAX_LIGHTS 16
+
+#define SMODE_PHONG 0
+#define SMODE_BLINN 1
+#define SMODE_GOURAUD 2
+
+struct Material
+{
+  sampler2D diffuse;
+  sampler2D specular;
+  float shininess;
+};
+
+struct UberLight
+{
+  // all light
+  int type;
+  vec3 ambient;
+  vec3 diffuse;
+  vec3 specular;
+
+  // point + spot light
+  vec3 position;
+  float constant;
+  float linear;
+  float quadratic;
+
+  // directional + spot light
+  vec3 direction;
+
+  // spot light
+  float innerCutOff;
+  float outerCutOff;
+  float falloffIntensity;
+};
+
+#define SPECULAR_STRENGTH 1
+
+out vec4 color;
+
+uniform vec3 viewPos;
+uniform Material object;
+
+uniform int shaderMode = SMODE_PHONG;
+uniform int lightCount; //# of active lights
 uniform UberLight lights[MAX_LIGHTS];
 uniform float ZNear = .1;
 uniform float ZFar = 300;

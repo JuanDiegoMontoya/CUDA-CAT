@@ -1,16 +1,3 @@
-/* Start Header -------------------------------------------------------
-Copyright (C) 2019 DigiPen Institute of Technology.
-Reproduction or disclosure of this file or its contents without the prior written
-consent of DigiPen Institute of Technology is prohibited.
-File Name: phong.vs
-Purpose: Uber fragment shader
-Language: C++/GLSL
-Platform: MSVC 1916, Win64
-Project: jake.ryan_CS300_2
-Author: Jake Ryan, jake.ryan, 180003017
-Creation date: 12-11-19
-End Header --------------------------------------------------------*/
-
 #version 450 core
 
 #define LIGHT_POINT 0
