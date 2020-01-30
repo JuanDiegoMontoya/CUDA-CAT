@@ -1,0 +1,261 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Debug">
+      <UniqueIdentifier>{c7c4b422-ac46-48ed-a9ba-1595ccaeece3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Graphics">
+      <UniqueIdentifier>{e3cc9721-b2b3-4f9f-bb9e-5885dc7931e9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="System">
+      <UniqueIdentifier>{8137757d-606b-4537-8a34-13d31d176996}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Utilities">
+      <UniqueIdentifier>{41a105f9-0ab4-45fc-abbb-9c60c2cb2ecd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="vendor">
+      <UniqueIdentifier>{1a6c8430-ea70-46fd-bd88-b2e2299e7864}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game">
+      <UniqueIdentifier>{5a514f78-58df-41a9-915c-40c526acd901}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Graphics\Low Level">
+      <UniqueIdentifier>{f15c4eb7-c236-4099-872d-394e1a0f13ed}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Graphics\Meshes">
+      <UniqueIdentifier>{7f6f16ea-4562-4608-8caa-0f7db3051a4c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="vendor\ctpl">
+      <UniqueIdentifier>{d94d4b42-3a18-475f-a15a-e49c0985918a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\Shaders">
+      <UniqueIdentifier>{0ca13bfa-7e7c-4edb-997e-fefac70213b2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\Models">
+      <UniqueIdentifier>{b7d3d912-c994-455b-84af-698d1caae55d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CA">
+      <UniqueIdentifier>{f0ab440e-1854-4d07-ab52-7bb4cfd0e63b}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="sys_window.h">
+      <Filter>Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="engine_assert.h">
+      <Filter>Debug</Filter>
+    </ClInclude>
+    <ClInclude Include="pipeline.h">
+      <Filter>Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="input.h">
+      <Filter>System</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h" />
+    <ClInclude Include="render.h">
+      <Filter>Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="utilities.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="graphics_utils.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="misc_utils.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="math_utils.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\imgui\imconfig.h">
+      <Filter>vendor</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\imgui\imgui.h">
+      <Filter>vendor</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\imgui\imgui_impl_glfw.h">
+      <Filter>vendor</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\imgui\imgui_impl_opengl3.h">
+      <Filter>vendor</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\imgui\imgui_internal.h">
+      <Filter>vendor</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\imgui\imstb_rectpack.h">
+      <Filter>vendor</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\imgui\imstb_textedit.h">
+      <Filter>vendor</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\imgui\imstb_truetype.h">
+      <Filter>vendor</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\imgui\stb_rect_pack.h">
+      <Filter>vendor</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\imgui\stb_textedit.h">
+      <Filter>vendor</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\imgui\stb_truetype.h">
+      <Filter>vendor</Filter>
+    </ClInclude>
+    <ClInclude Include="game.h">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="level.h">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="camera.h">
+      <Filter>Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="mesh.h">
+      <Filter>Graphics\Meshes</Filter>
+    </ClInclude>
+    <ClInclude Include="ibo.h">
+      <Filter>Graphics\Low Level</Filter>
+    </ClInclude>
+    <ClInclude Include="vbo.h">
+      <Filter>Graphics\Low Level</Filter>
+    </ClInclude>
+    <ClInclude Include="vbo_layout.h">
+      <Filter>Graphics\Low Level</Filter>
+    </ClInclude>
+    <ClInclude Include="vao.h">
+      <Filter>Graphics\Low Level</Filter>
+    </ClInclude>
+    <ClInclude Include="shader.h">
+      <Filter>Graphics\Low Level</Filter>
+    </ClInclude>
+    <ClInclude Include="texture.h">
+      <Filter>Graphics\Low Level</Filter>
+    </ClInclude>
+    <ClInclude Include="load_image.h">
+      <Filter>Graphics\Low Level</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui_impl.h">
+      <Filter>Graphics\Low Level</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\ctpl_stl.h">
+      <Filter>vendor\ctpl</Filter>
+    </ClInclude>
+    <ClInclude Include="debug.h">
+      <Filter>Debug</Filter>
+    </ClInclude>
+    <ClInclude Include="line.h">
+      <Filter>Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="game_object.h">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="settings.h" />
+    <ClInclude Include="tester.h">
+      <Filter>CA</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="sys_window.cpp">
+      <Filter>Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="engine_assert.cpp">
+      <Filter>Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="pipeline.cpp">
+      <Filter>Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>System</Filter>
+    </ClCompile>
+    <ClCompile Include="input.cpp">
+      <Filter>System</Filter>
+    </ClCompile>
+    <ClCompile Include="render.cpp">
+      <Filter>Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="misc_utils.cpp">
+      <Filter>Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="graphics_utils.cpp">
+      <Filter>Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="math_utils.cpp">
+      <Filter>Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="vendor\imgui\imgui.cpp">
+      <Filter>vendor</Filter>
+    </ClCompile>
+    <ClCompile Include="vendor\imgui\imgui_demo.cpp">
+      <Filter>vendor</Filter>
+    </ClCompile>
+    <ClCompile Include="vendor\imgui\imgui_draw.cpp">
+      <Filter>vendor</Filter>
+    </ClCompile>
+    <ClCompile Include="vendor\imgui\imgui_impl_glfw.cpp">
+      <Filter>vendor</Filter>
+    </ClCompile>
+    <ClCompile Include="vendor\imgui\imgui_impl_opengl3.cpp">
+      <Filter>vendor</Filter>
+    </ClCompile>
+    <ClCompile Include="vendor\imgui\imgui_widgets.cpp">
+      <Filter>vendor</Filter>
+    </ClCompile>
+    <ClCompile Include="game.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="level.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="camera.cpp">
+      <Filter>Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="mesh.cpp">
+      <Filter>Graphics\Meshes</Filter>
+    </ClCompile>
+    <ClCompile Include="ibo.cpp">
+      <Filter>Graphics\Low Level</Filter>
+    </ClCompile>
+    <ClCompile Include="vbo.cpp">
+      <Filter>Graphics\Low Level</Filter>
+    </ClCompile>
+    <ClCompile Include="vao.cpp">
+      <Filter>Graphics\Low Level</Filter>
+    </ClCompile>
+    <ClCompile Include="shader.cpp">
+      <Filter>Graphics\Low Level</Filter>
+    </ClCompile>
+    <ClCompile Include="texture.cpp">
+      <Filter>Graphics\Low Level</Filter>
+    </ClCompile>
+    <ClCompile Include="load_image.cpp">
+      <Filter>Graphics\Low Level</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui_impl.cpp">
+      <Filter>Graphics\Low Level</Filter>
+    </ClCompile>
+    <ClCompile Include="debug.cpp">
+      <Filter>Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="line.cpp">
+      <Filter>Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="game_object.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="settings.cpp" />
+    <ClCompile Include="tester.cpp">
+      <Filter>CA</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="test.cu">
+      <Filter>CA</Filter>
+    </None>
+    <None Include="test.cuh">
+      <Filter>CA</Filter>
+    </None>
+  </ItemGroup>
+</Project>
