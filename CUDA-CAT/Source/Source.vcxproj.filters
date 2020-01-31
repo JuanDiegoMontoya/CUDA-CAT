@@ -156,6 +156,9 @@
     <ClInclude Include="tester.h">
       <Filter>CA</Filter>
     </ClInclude>
+    <ClInclude Include="waterCA.h">
+      <Filter>CA</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="sys_window.cpp">
@@ -257,5 +260,10 @@
     <None Include="test.cuh">
       <Filter>CA</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="waterCA.cu">
+      <Filter>CA</Filter>
+    </CudaCompile>
   </ItemGroup>
 </Project>
