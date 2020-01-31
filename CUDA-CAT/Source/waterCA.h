@@ -1,17 +1,42 @@
 #pragma once
-#include <glm/vec3.hpp> // just for visual error
+//#include <glm/vec3.hpp> // just for visual error
+
+// unfortunately we need these defines to easily have this data
+// visible at the global scope- both on the host and the device
+#define GRID_SIZE_X 10
+#define GRID_SIZE_Y 10
+#define GRID_SIZE_Z 10
+#define CELL_COUNT (GRID_SIZE_X * GRID_SIZE_Y * GRID_SIZE_Z)
 
 namespace WCA
 {
 	struct Cell
 	{
-		Cell() : wallHere_(false), fill_(0), velocity_(0) {}
-		bool wallHere_;
+		Cell() : isWall_(false), fill_(0), velocity_(0) {}
+		bool isWall_;
 		float fill_; // 0-1 normal fill range
 		glm::ivec3 velocity_; // axis aligned
 	};
 
-	constexpr inline glm::uvec3 GRID_SIZE(10,10,10);
+	// normals of cube, or cell in this instance
+	const glm::ivec3 dirs[6] =
+	{
+		{-1, 0, 0 },
+		{ 1, 1, 0 },
+		{ 0,-1, 0 },
+		{ 0, 0, 1 },
+		{ 0, 0,-1 }
+	};
 
-	inline Cell Grid[GRID_SIZE.x * GRID_SIZE.y * GRID_SIZE.z];
+	//const glm::uvec3 GRID_SIZE = { 10, 10, 10 };
+	//const unsigned CELL_COUNT = GRID_SIZE.x * GRID_SIZE.y * GRID_SIZE.z;
+
+	const int blockSize = 256;
+	const int numBlocks = (CELL_COUNT + blockSize - 1) / blockSize;
+
+	extern Cell* Grid;
+	extern Cell* TGrid;
+
+	void UpdateWCA();
+	void InitWCA();
 }

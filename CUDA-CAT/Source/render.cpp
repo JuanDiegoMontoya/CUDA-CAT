@@ -10,6 +10,7 @@
 #include "render.h"
 
 #include "tester.h"
+#include "waterCA.h"
 
 #define VISUALIZE_MAPS 0
 
@@ -22,6 +23,8 @@ void Renderer::Init()
 {
 	initPPBuffers();
 	testFunc();
+	WCA::InitWCA();
+	WCA::UpdateWCA();
 }
 
 
