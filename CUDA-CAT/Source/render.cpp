@@ -22,9 +22,8 @@ Renderer::Renderer() {}
 void Renderer::Init()
 {
 	initPPBuffers();
-	testFunc();
+	//testFunc();
 	WCA::InitWCA();
-	WCA::UpdateWCA();
 }
 
 
@@ -37,6 +36,8 @@ void Renderer::DrawAll()
 
 	//for (auto& obj : objects)
 	//	obj->Update();
+	WCA::UpdateWCA();
+	WCA::RenderWCA();
 
 	auto view = Render::GetCamera()->GetView();
 	auto proj = Render::GetCamera()->GetProj();

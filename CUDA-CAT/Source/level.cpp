@@ -11,6 +11,7 @@
 #include "settings.h"
 #include <functional>
 #include <filesystem>
+#include "waterCA.h"
 
 using namespace std::chrono;
 using namespace std::filesystem;

@@ -221,8 +221,11 @@ copy "$(SolutionDir)lib\glfw-3.3.bin.WIN64\lib-vc2015\glfw3.dll" "$(TargetDir)gl
 
 copy "$(SolutionDir)lib\CUDA\cudart64_102.dll" "$(TargetDir)cudart64_102.dll" /Y</Command>
     </PostBuildEvent>
+    <CudaCompile />
+    <CudaCompile />
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="CAMesh.cpp" />
     <ClCompile Include="debug.cpp" />
     <ClCompile Include="game_object.cpp" />
     <ClCompile Include="line.cpp" />
@@ -311,6 +314,7 @@ copy "$(SolutionDir)lib\CUDA\cudart64_102.dll" "$(TargetDir)cudart64_102.dll" /Y
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="camera.h" />
+    <ClInclude Include="CAMesh.h" />
     <ClInclude Include="debug.h" />
     <ClInclude Include="game_object.h" />
     <ClInclude Include="line.h" />

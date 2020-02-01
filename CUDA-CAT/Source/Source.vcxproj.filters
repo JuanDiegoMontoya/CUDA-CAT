@@ -159,6 +159,9 @@
     <ClInclude Include="waterCA.h">
       <Filter>CA</Filter>
     </ClInclude>
+    <ClInclude Include="CAMesh.h">
+      <Filter>CA</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="sys_window.cpp">
@@ -252,18 +255,15 @@
     <ClCompile Include="tester.cpp">
       <Filter>CA</Filter>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="test.cu">
+    <ClCompile Include="CAMesh.cpp">
       <Filter>CA</Filter>
-    </None>
-    <None Include="test.cuh">
-      <Filter>CA</Filter>
-    </None>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="waterCA.cu">
       <Filter>CA</Filter>
     </CudaCompile>
+    <CudaCompile Include="test.cu" />
+    <CudaCompile Include="test.cuh" />
   </ItemGroup>
 </Project>

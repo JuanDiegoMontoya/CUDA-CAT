@@ -15,27 +15,15 @@ struct Vertex
 	//int index;
 };
 
-enum struct ProjectorFn : int
-{
-	Cube,
-	Sphere,
-	Cylinder
-};
-
-enum struct TexEntity
-{
-	Position = 0,
-	Normal = 1
-};
-
 class Mesh
 {
 public:
 
-	explicit Mesh(std::vector<Vertex> vertices, std::vector<unsigned> indices, 
-		std::vector<Texture> textures, ProjectorFn fn = ProjectorFn::Sphere,
-		TexEntity entity = TexEntity::Position);
-	Mesh(const Mesh& other, ProjectorFn fn, TexEntity entity);
+	explicit Mesh(std::vector<Vertex> vertices, 
+		std::vector<unsigned> indices, 
+		std::vector<Texture> textures);
+	Mesh(const Mesh& other);
+	~Mesh();
 
 	void Draw();
 
@@ -48,14 +36,13 @@ public:
 protected:
 	Mesh() = delete;
 
-	VAO* vao;
-	VBO* vbo;
-	IBO* ibo;
+	VAO* vao = nullptr;
+	VBO* vbo = nullptr;
+	IBO* ibo = nullptr;
 
   unsigned vertCount;
 	bool indexed; // whether to use DrawElements or DrawArrays
 	void setupBuffers();
-	void generateTexcoords(ProjectorFn fn, TexEntity entity);
 
 	std::vector<Vertex> vertices;
 	std::vector<GLuint> indices;

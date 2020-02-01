@@ -8,6 +8,8 @@
 #define GRID_SIZE_Z 10
 #define CELL_COUNT (GRID_SIZE_X * GRID_SIZE_Y * GRID_SIZE_Z)
 
+#define WMOV_INC 0.005f // how much water to move incrementally
+
 namespace WCA
 {
 	struct Cell
@@ -22,11 +24,13 @@ namespace WCA
 	const glm::ivec3 dirs[6] =
 	{
 		{-1, 0, 0 },
-		{ 1, 1, 0 },
+		{ 1, 0, 0 },
 		{ 0,-1, 0 },
-		{ 0, 0, 1 },
-		{ 0, 0,-1 }
+		{ 0, 1, 0 },
+		{ 0, 0,-1 },
+		{ 0, 0, 1 }
 	};
+
 
 	//const glm::uvec3 GRID_SIZE = { 10, 10, 10 };
 	//const unsigned CELL_COUNT = GRID_SIZE.x * GRID_SIZE.y * GRID_SIZE.z;
@@ -36,7 +40,9 @@ namespace WCA
 
 	extern Cell* Grid;
 	extern Cell* TGrid;
+	extern bool UpdateWallMesh;
 
 	void UpdateWCA();
+	void RenderWCA();
 	void InitWCA();
 }

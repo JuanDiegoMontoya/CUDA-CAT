@@ -1,11 +1,21 @@
 #include "stdafx.h"
 #include "waterCA.h"
+#include "CAMesh.h"
+
+//render
+#include "shader.h"
+#include "camera.h"
+#include "pipeline.h"
 
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
+#include "device_atomic_functions.h"
 
 WCA::Cell* WCA::Grid;
 WCA::Cell* WCA::TGrid;
+bool WCA::UpdateWallMesh = false;
+static Mesh* wallMesh = nullptr;
+static Mesh* waterMesh = nullptr;
 
 namespace WCA
 {
@@ -26,11 +36,22 @@ namespace WCA
 	}
 
 
+
 	// updates grid using water rules
 	// writes results to tempGrid to avoid race condition
 	__global__
 	void updateGrid(Cell* grid, Cell* tempGrid, int n)
 	{
+		const glm::ivec3 side[] =
+		{
+			glm::ivec3(-1, 0, 0),
+			glm::ivec3(1, 0, 0),
+			glm::ivec3(0, 0,-1),
+			glm::ivec3(0, 0, 1)
+		};
+		const glm::ivec3 down = { 0, -1, 0 };
+		const glm::ivec3 up = { 0, 1, 0 };
+
 		int index = blockIdx.x * blockDim.x + threadIdx.x;
 		int stride = blockDim.x * gridDim.x;
 
@@ -38,7 +59,27 @@ namespace WCA
 		{
 			// get coord from index
 			glm::ivec3 pos = expand(i);
-
+			Cell cell = grid[i];
+			
+			// move some water down if there is space
+			glm::ivec3 downPos = pos + down;
+			if (downPos.y > 0)
+			{
+				int downIdx = flatten(downPos);
+				Cell downCell = grid[downIdx];
+				if (cell.fill_ > 0 && downCell.fill_ < cell.fill_ && !downCell.isWall_)
+				{
+					//cell.fill_ -= WMOV_INC;
+					cell.velocity_ = down;
+					//atomicAdd(&tempGrid[downIdx].fill_, WMOV_INC);
+					downCell.fill_ += WMOV_INC;
+					tempGrid[downIdx] = downCell;
+				}
+			}
+			
+			//if (nearCellIdx > -1)
+			//	tempGrid[nearCellIdx] = nearCell;
+			tempGrid[i] = cell;
 		}
 
 	}
@@ -64,12 +105,22 @@ namespace WCA
 					// place walls at edges
 					if (
 						x == GRID_SIZE_X - 1 || x == 0 ||
-						y == GRID_SIZE_Y - 1 || y == 0 ||
+						/*y == GRID_SIZE_Y - 1 ||*/ y == 0 || // leave top open
 						z == GRID_SIZE_Z - 1 || z == 0)
 						Grid[index].isWall_ = true;
+
+					if (x == 4 && y == 4 && z == 4) Grid[index].fill_ = 1.0f;
+					if (x == 6 && y == 4 && z == 4) Grid[index].fill_ = .2f;
 				}
 			}
 		}
+
+		// init grids to be same
+		for (int i = 0; i < CELL_COUNT; i++)
+			TGrid[i] = Grid[i];
+
+		wallMesh = new Mesh(GenWallMesh(Grid));
+		waterMesh = new Mesh(GenWaterMesh(Grid));
 	}
 
 
@@ -82,6 +133,34 @@ namespace WCA
 		// we no longer care about values in Grid anymore
 		// a simple swap of pointers will suffice
 		std::swap(Grid, TGrid);
+
+		if (waterMesh)
+		{
+			delete waterMesh;
+			waterMesh = new Mesh(GenWaterMesh(Grid));
+		}
+
+		if (UpdateWallMesh)
+		{
+			delete wallMesh;
+			wallMesh = new Mesh(GenWallMesh(Grid));
+		}
+	}
+
+
+	void RenderWCA()
+	{
+		ShaderPtr sr = Shader::shaders["flat"];
+		sr->Use();
+		sr->setMat4("u_proj", Render::GetCamera()->GetProj());
+		sr->setMat4("u_view", Render::GetCamera()->GetView());
+		sr->setMat4("u_model", glm::mat4(1));
+		sr->setVec3("u_color", glm::vec3(.1));
+
+		wallMesh->Draw();
+
+		sr->setVec3("u_color", { 0, .4, .9 });
+		waterMesh->Draw();
 	}
 
 
