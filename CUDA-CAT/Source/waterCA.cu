@@ -63,17 +63,29 @@ namespace WCA
 			
 			// move some water down if there is space
 			glm::ivec3 downPos = pos + down;
+			glm::ivec3 upPos = pos + up;
 			if (downPos.y > 0)
 			{
 				int downIdx = flatten(downPos);
 				Cell downCell = grid[downIdx];
-				if (cell.fill_ > 0 && downCell.fill_ < cell.fill_ && !downCell.isWall_)
+				if (cell.fill_ > 0 && downCell.fill_ < MAX_WATER && !downCell.isWall_)
 				{
-					//cell.fill_ -= WMOV_INC;
+					cell.fill_ -= WMOV_INC;
 					cell.velocity_ = down;
 					//atomicAdd(&tempGrid[downIdx].fill_, WMOV_INC);
-					downCell.fill_ += WMOV_INC;
-					tempGrid[downIdx] = downCell;
+					//downCell.fill_ += WMOV_INC;
+					//tempGrid[downIdx] = downCell;
+				}
+			}
+			// add some water to this if above has more
+			if (upPos.y < GRID_SIZE_Y)
+			{
+				int upIdx = flatten(upPos);
+				Cell upCell = grid[upIdx];
+				if (upCell.fill_ > 0 && cell.fill_ < MAX_WATER && !upCell.isWall_)
+				{
+					cell.fill_ += WMOV_INC;
+					cell.velocity_ = down;
 				}
 			}
 			

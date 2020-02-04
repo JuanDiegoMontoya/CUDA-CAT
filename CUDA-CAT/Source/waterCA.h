@@ -7,8 +7,9 @@
 #define GRID_SIZE_Y 10
 #define GRID_SIZE_Z 10
 #define CELL_COUNT (GRID_SIZE_X * GRID_SIZE_Y * GRID_SIZE_Z)
+#define MAX_WATER 1.0f
 
-#define WMOV_INC 0.005f // how much water to move incrementally
+#define WMOV_INC 0.0078125f // how much water to move incrementally
 
 namespace WCA
 {

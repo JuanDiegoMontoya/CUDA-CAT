@@ -110,4 +110,11 @@ void Level::DrawImGui()
 
 		ImGui::End();
 	}
+
+	{
+		ImGui::Begin("CUDA Simulation");
+		if (ImGui::Button("Re-init Simulation"))
+			WCA::InitWCA();
+		ImGui::End();
+	}
 }
