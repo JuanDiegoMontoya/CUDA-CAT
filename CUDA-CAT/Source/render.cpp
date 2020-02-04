@@ -36,7 +36,8 @@ void Renderer::DrawAll()
 
 	//for (auto& obj : objects)
 	//	obj->Update();
-	WCA::UpdateWCA();
+	if (!pauseSimulation)
+		WCA::UpdateWCA();
 	WCA::RenderWCA();
 
 	auto view = Render::GetCamera()->GetView();

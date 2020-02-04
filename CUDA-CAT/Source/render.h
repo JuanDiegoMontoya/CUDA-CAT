@@ -35,6 +35,9 @@ public:
 	bool ppBlurFilter = false;
 	bool ppEdgeDetection = false;
 	bool ppChromaticAberration = false;
+
+	// CA
+	bool pauseSimulation = false;
 private:
 	// broad-phase rendering
 	void drawSky();

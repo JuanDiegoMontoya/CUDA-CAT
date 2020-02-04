@@ -3,9 +3,9 @@
 
 // unfortunately we need these defines to easily have this data
 // visible at the global scope- both on the host and the device
-#define GRID_SIZE_X 10
-#define GRID_SIZE_Y 10
-#define GRID_SIZE_Z 10
+#define GRID_SIZE_X 15
+#define GRID_SIZE_Y 15
+#define GRID_SIZE_Z 15
 #define CELL_COUNT (GRID_SIZE_X * GRID_SIZE_Y * GRID_SIZE_Z)
 #define MAX_WATER 1.0f
 

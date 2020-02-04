@@ -112,9 +112,18 @@ void Level::DrawImGui()
 	}
 
 	{
-		ImGui::Begin("CUDA Simulation");
+		ImGui::Begin("CA Simulation");
+		ImGui::Checkbox("Pause Simulation", &renderer_.pauseSimulation);
 		if (ImGui::Button("Re-init Simulation"))
 			WCA::InitWCA();
+		if (ImGui::Button("1x Update Simulation"))
+			WCA::UpdateWCA();
+		if (ImGui::Button("20x Update Simulation"))
+			for (int i = 0; i < 20; i++)
+				WCA::UpdateWCA();
+		if (ImGui::Button("200x Update Simulation"))
+			for (int i = 0; i < 200; i++)
+				WCA::UpdateWCA();
 		ImGui::End();
 	}
 }
