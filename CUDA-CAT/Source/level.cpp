@@ -118,15 +118,15 @@ void Level::DrawImGui()
 		if (ImGui::Button("Re-init Simulation"))
 			WCA::InitWCA();
 		if (ImGui::Button("Re-init GoL"))
-			renderer_.GoL.Init();
+			renderer_.automaton->Init();
 		if (ImGui::Button("1x Update Simulation"))
-			WCA::UpdateWCA();
+			renderer_.automaton->Update();
 		if (ImGui::Button("20x Update Simulation"))
 			for (int i = 0; i < 20; i++)
-				WCA::UpdateWCA();
+				renderer_.automaton->Update();
 		if (ImGui::Button("200x Update Simulation"))
 			for (int i = 0; i < 200; i++)
-				WCA::UpdateWCA();
+				renderer_.automaton->Update();
 		ImGui::End();
 	}
 }

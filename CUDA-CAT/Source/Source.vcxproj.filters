@@ -171,6 +171,9 @@
     <ClInclude Include="CommonDevice.cuh">
       <Filter>CA</Filter>
     </ClInclude>
+    <ClInclude Include="Cell.cuh">
+      <Filter>CA</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="sys_window.cpp">

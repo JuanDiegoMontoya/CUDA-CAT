@@ -319,6 +319,7 @@ copy "$(SolutionDir)lib\CUDA\cudart64_102.dll" "$(TargetDir)cudart64_102.dll" /Y
   <ItemGroup>
     <ClInclude Include="camera.h" />
     <ClInclude Include="CAMesh.h" />
+    <ClInclude Include="Cell.cuh" />
     <ClInclude Include="CellularAutomata.h" />
     <ClInclude Include="CommonDevice.cuh" />
     <ClInclude Include="debug.h" />

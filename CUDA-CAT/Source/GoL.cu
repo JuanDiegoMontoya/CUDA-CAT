@@ -11,11 +11,7 @@
 #define FLATTENV(p) (FLATTEN(p.x, p.y, p.z))
 
 template class GameOfLife<50, 50, 50>;
-
-void GoLCell::Update(glm::ivec3 pos, Cell* grid, glm::ivec3 bound)
-{
-	auto GGrid = reinterpret_cast<GoLCell*>(grid);
-}
+template class GameOfLife<200, 200, 1>;
 
 template<int X, int Y, int Z>
 __global__ static void updateGridGOL(GoLCell* grid, GoLCell* tempGrid, int n, GoLRule r)
@@ -28,7 +24,7 @@ __global__ static void updateGridGOL(GoLCell* grid, GoLCell* tempGrid, int n, Go
 		bool thisAlive = grid[i].Alive;
 		bool nextState;
 		glm::ivec3 thisPos = expand<X, Y>(i);
-		int env = -1; // un-count self
+		int env = thisAlive ? -1 : 0; // un-count self if alive
 		
 		// iterate each of 26 neighbors, checking their living status if they exist
 		for (int z = -1; z <= 1; z++)
@@ -52,8 +48,6 @@ __global__ static void updateGridGOL(GoLCell* grid, GoLCell* tempGrid, int n, Go
 			}
 		}
 
-		// A living cell remains living if it has between 2 and 3 living neighbors,
-		// A dead cell will become alive if it has between 3 and 3 living neighbors.
 		if (thisAlive)
 		{
 			if (env >= r.eL && env <= r.eH)
@@ -69,8 +63,6 @@ __global__ static void updateGridGOL(GoLCell* grid, GoLCell* tempGrid, int n, Go
 				nextState = false;
 		}
 
-		//Cell swag(grid[i]); swag.fill_ = nextState;
-		//tempGrid[i] = swag;
 		tempGrid[i].Alive = nextState;
 	}
 }
@@ -115,7 +107,8 @@ void GameOfLife<X, Y, Z>::Update()
 	GoLRule r3 = { 5, 7, 6, 6 };
 	GoLRule r4 = { 4, 5, 5, 5 };
 	GoLRule r5 = { 3, 3, 3, 3 };
-	updateGridGOL<X, Y, Z> <<<numBlocks, blockSize>>>(this->Grid, this->TGrid, X * Y * Z, r5);
+	GoLRule rog = { 2, 3, 3, 3 };
+	updateGridGOL<X, Y, Z> <<<numBlocks, blockSize>>>(this->Grid, this->TGrid, X * Y * Z, rog);
 	cudaDeviceSynchronize();
 
 	// TGrid contains updated grid values after update

@@ -40,7 +40,8 @@ public:
 	float updateFrequency = .1f; // seconds
 	float timeCount = 0;
 	GameOfLife<50, 50, 50> GoL;
-	CellularAutomata* automaton = GoL;
+	GameOfLife<200, 200, 1> GoL2;
+	CAInterface* automaton = reinterpret_cast<CAInterface*>(&GoL2);
 
 private:
 	void drawQuad();

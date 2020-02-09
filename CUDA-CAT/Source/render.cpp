@@ -25,7 +25,7 @@ void Renderer::Init()
 	//testFunc();
 	//WCA::InitWCA();
 	//WCA::InitGoLCA();
-	GoL.Init();
+	automaton->Init();
 }
 
 
@@ -45,12 +45,12 @@ void Renderer::DrawAll()
 		if (timeCount > updateFrequency)
 		{
 			//WCA::UpdateWCA();
-			GoL.Update();
+			automaton->Update();
 			timeCount = 0;
 		}
 	}
 	//WCA::RenderWCA();
-	GoL.Render();
+	automaton->Render();
 
 	auto view = Render::GetCamera()->GetView();
 	auto proj = Render::GetCamera()->GetProj();

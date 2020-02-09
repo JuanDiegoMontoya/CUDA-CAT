@@ -5,8 +5,9 @@ struct GoLCell : public Cell
 {
 	bool Alive = false;
 
-#ifdef __CUDACC__
-	virtual void Update(glm::ivec3 pos, Cell* grid, glm::ivec3 bound) override;
+#ifdef N__CUDACC__
+	template<int X, int Y, int Z>
+	virtual void Update(glm::ivec3 pos, Cell* grid) override;
 #endif
 };
 
@@ -21,6 +22,7 @@ template<int X, int Y, int Z>
 class GameOfLife : public CellularAutomata<GoLCell, X, Y, Z>
 {
 public:
+	//GameOfLife() : CellularAutomata(X, Y, Z)
 	virtual void Init() override;
 	virtual void Update() override;
 	virtual void Render() override;
@@ -28,4 +30,3 @@ public:
 private:
 	virtual void genMesh() override;
 };
-
