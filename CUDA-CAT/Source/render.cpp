@@ -23,7 +23,8 @@ void Renderer::Init()
 {
 	initPPBuffers();
 	//testFunc();
-	WCA::InitWCA();
+	//WCA::InitWCA();
+	WCA::InitGOLCA();
 }
 
 

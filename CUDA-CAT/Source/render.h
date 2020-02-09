@@ -37,7 +37,7 @@ public:
 	bool ppChromaticAberration = false;
 
 	// CA
-	bool pauseSimulation = false;
+	bool pauseSimulation = true;
 private:
 	// broad-phase rendering
 	void drawSky();

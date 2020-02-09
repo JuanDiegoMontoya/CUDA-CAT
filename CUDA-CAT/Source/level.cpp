@@ -116,6 +116,8 @@ void Level::DrawImGui()
 		ImGui::Checkbox("Pause Simulation", &renderer_.pauseSimulation);
 		if (ImGui::Button("Re-init Simulation"))
 			WCA::InitWCA();
+		if (ImGui::Button("Re-init GOL"))
+			WCA::InitGOLCA();
 		if (ImGui::Button("1x Update Simulation"))
 			WCA::UpdateWCA();
 		if (ImGui::Button("20x Update Simulation"))
