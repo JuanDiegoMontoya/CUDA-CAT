@@ -81,8 +81,8 @@ void Level::DrawImGui()
 		}
 		if (ImGui::Button("Recompile Phong Shader"))
 		{
-			delete Shader::shaders["phong"];
-			Shader::shaders["phong"] = new Shader("phong.vs", "phong.fs");
+			delete Shader::shaders["flatPhong"];
+			Shader::shaders["flatPhong"] = new Shader("flatPhong.vs", "flatPhong.fs");
 		}
 
 		ImGui::End();
@@ -114,10 +114,11 @@ void Level::DrawImGui()
 	{
 		ImGui::Begin("CA Simulation");
 		ImGui::Checkbox("Pause Simulation", &renderer_.pauseSimulation);
+		ImGui::SliderFloat("s/Update", &renderer_.updateFrequency, 0, 1, "%.2f");
 		if (ImGui::Button("Re-init Simulation"))
 			WCA::InitWCA();
-		if (ImGui::Button("Re-init GOL"))
-			WCA::InitGOLCA();
+		if (ImGui::Button("Re-init GoL"))
+			renderer_.GoL.Init();
 		if (ImGui::Button("1x Update Simulation"))
 			WCA::UpdateWCA();
 		if (ImGui::Button("20x Update Simulation"))

@@ -4,7 +4,7 @@
 #include "pipeline.h"
 #include "utilities.h"
 
-#define FLATTEN(x, y, z) (x + y * GRID_SIZE_X + z * GRID_SIZE_X * GRID_SIZE_Z)
+#define FLATTEN(x, y, z) (x + y * GRID_SIZE_X + z * GRID_SIZE_X * GRID_SIZE_Y)
 #define FLATTENV(p) (FLATTEN(p.x, p.y, p.z))
 
 // in the future, might make the mesh on the GPU (which should be fairly simple)
@@ -49,6 +49,8 @@ namespace WCA
 	{
 		std::vector<Vertex> vertices;
 		std::vector<GLuint> indices;
+		vertices.reserve(2'000'000);
+		indices.reserve(2'000'000);
 
 		for (int z = 0; z < GRID_SIZE_Z; z++)
 		{
@@ -60,10 +62,10 @@ namespace WCA
 				{
 					int index = x + yzpart;
 					glm::vec3 pos(x, y, z);
-					Cell cell = grid[index];
+					const Cell& cell = grid[index];
 
 					// skip wall cells...
-					if (cell.isWall_ == true)
+					if (cell.isWall_)
 						continue;
 					if (cell.fill_ <= 0)
 						continue;
@@ -137,6 +139,53 @@ namespace WCA
 						}
 						const Cell& nearCell = grid[FLATTENV(ncp)];
 						if (nearCell.isWall_) // skip opposing faces
+							continue;
+						AddQuad({ x, y, z }, f, vertices, indices);
+					}
+				}
+			}
+		}
+
+		return Mesh(vertices, indices, std::vector<Texture>());
+	}
+
+
+	Mesh GenGoLMesh(Cell* grid)
+	{
+		std::vector<Vertex> vertices;
+		std::vector<GLuint> indices;
+
+		for (int z = 0; z < GRID_SIZE_Z; z++)
+		{
+			int zpart = z * GRID_SIZE_X * GRID_SIZE_Y;
+			for (int y = 0; y < GRID_SIZE_Y; y++)
+			{
+				int yzpart = zpart + y * GRID_SIZE_X;
+				for (int x = 0; x < GRID_SIZE_X; x++)
+				{
+					int index = x + yzpart;
+
+					// skip empty cells
+					if (grid[index].fill_ == 0)
+						continue;
+
+					// iterate faces of cells
+					for (int f = 0; f < 6; f++)
+					{
+						const auto& normal = faces[f];
+
+						// near cell pos
+						glm::ivec3 ncp(x + normal.x, y + normal.y, z + normal.z);
+						if ( // generate quad if near cell would be OOB
+							ncp.x < 0 || ncp.x > GRID_SIZE_X - 1 ||
+							ncp.y < 0 || ncp.y > GRID_SIZE_Y - 1 ||
+							ncp.z < 0 || ncp.z > GRID_SIZE_Z - 1)
+						{
+							AddQuad({ x, y, z }, f, vertices, indices);
+							continue;
+						}
+						const Cell& nearCell = grid[FLATTENV(ncp)];
+						if (nearCell.fill_ != 0) // skip opposing faces
 							continue;
 						AddQuad({ x, y, z }, f, vertices, indices);
 					}

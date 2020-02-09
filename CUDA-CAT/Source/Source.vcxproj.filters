@@ -162,6 +162,15 @@
     <ClInclude Include="CAMesh.h">
       <Filter>CA</Filter>
     </ClInclude>
+    <ClInclude Include="CellularAutomata.h">
+      <Filter>CA</Filter>
+    </ClInclude>
+    <ClInclude Include="GoL.h">
+      <Filter>CA</Filter>
+    </ClInclude>
+    <ClInclude Include="CommonDevice.cuh">
+      <Filter>CA</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="sys_window.cpp">
@@ -258,6 +267,9 @@
     <ClCompile Include="CAMesh.cpp">
       <Filter>CA</Filter>
     </ClCompile>
+    <ClCompile Include="CellularAutomata.cpp">
+      <Filter>CA</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="waterCA.cu">
@@ -265,5 +277,8 @@
     </CudaCompile>
     <CudaCompile Include="test.cu" />
     <CudaCompile Include="test.cuh" />
+    <CudaCompile Include="GoL.cu">
+      <Filter>CA</Filter>
+    </CudaCompile>
   </ItemGroup>
 </Project>

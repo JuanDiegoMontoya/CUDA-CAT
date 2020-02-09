@@ -226,8 +226,12 @@ copy "$(SolutionDir)lib\CUDA\cudart64_102.dll" "$(TargetDir)cudart64_102.dll" /Y
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="CAMesh.cpp" />
+    <ClCompile Include="CellularAutomata.cpp" />
     <ClCompile Include="debug.cpp" />
     <ClCompile Include="game_object.cpp" />
+    <CudaCompile Include="GoL.cu">
+      <FileType>CppCode</FileType>
+    </CudaCompile>
     <ClCompile Include="line.cpp" />
     <ClCompile Include="settings.cpp" />
     <ClCompile Include="camera.cpp" />
@@ -315,8 +319,11 @@ copy "$(SolutionDir)lib\CUDA\cudart64_102.dll" "$(TargetDir)cudart64_102.dll" /Y
   <ItemGroup>
     <ClInclude Include="camera.h" />
     <ClInclude Include="CAMesh.h" />
+    <ClInclude Include="CellularAutomata.h" />
+    <ClInclude Include="CommonDevice.cuh" />
     <ClInclude Include="debug.h" />
     <ClInclude Include="game_object.h" />
+    <ClInclude Include="GoL.h" />
     <ClInclude Include="line.h" />
     <ClInclude Include="settings.h" />
     <ClInclude Include="engine_assert.h" />

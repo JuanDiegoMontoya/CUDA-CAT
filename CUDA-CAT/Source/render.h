@@ -3,6 +3,7 @@
 #include "mesh.h"
 #include "line.h"
 #include "game_object.h"
+#include "GoL.h"
 
 class VAO;
 class IBO;
@@ -21,8 +22,6 @@ public:
 	void DrawAll();
 	void Clear();
 
-	static void DrawCube();
-
 	bool renderShadows = true;
 	bool doGeometryPass = true; // for ssr currently
 	//bool renderSSR = true;
@@ -38,30 +37,14 @@ public:
 
 	// CA
 	bool pauseSimulation = true;
-private:
-	// broad-phase rendering
-	void drawSky();
-	void drawNormal(const glm::mat4& view, const glm::mat4& proj, const glm::vec3& viewpos); // draw what we see
+	float updateFrequency = .1f; // seconds
+	float timeCount = 0;
+	GameOfLife<50, 50, 50> GoL;
+	CellularAutomata* automaton = GoL;
 
-	// narrow-phase rendering
-	void drawMeshes(
-		DrawCB predraw_cb, 
-		ModelCB draw_cb, 
-		DrawCB postdraw_cb,
-		std::vector<void*>& cont);
-	void drawBillboard(VAO* vao, size_t count, DrawCB uniform_cb);
+private:
 	void drawQuad();
 
 	// debug
-	void drawDepthMapsDebug();
 	void drawAxisIndicators();
-
-	// post processing
-	void initPPBuffers();
-	void postProcess();
-
-	// pp
-	unsigned pBuffer;
-	unsigned pColor;
-	unsigned pDepth;
 };

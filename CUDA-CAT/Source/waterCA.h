@@ -3,9 +3,9 @@
 
 // unfortunately we need these defines to easily have this data
 // visible at the global scope- both on the host and the device
-#define GRID_SIZE_X 25
-#define GRID_SIZE_Y 25
-#define GRID_SIZE_Z 25
+#define GRID_SIZE_X 50
+#define GRID_SIZE_Y 50
+#define GRID_SIZE_Z 50
 #define CELL_COUNT (GRID_SIZE_X * GRID_SIZE_Y * GRID_SIZE_Z)
 #define MAX_WATER 1.0f
 
@@ -32,14 +32,6 @@ namespace WCA
 		{ 0, 0, 1 }
 	};
 
-	struct GOLRule
-	{
-		int eL, eH; // environment low, high (living dies otherwise)
-		int fL, fH; // fertility low, high (otherwise nothing)
-
-		// normal GOL rules are 2,3,3,3 
-	};
-
 	//const glm::uvec3 GRID_SIZE = { 10, 10, 10 };
 	//const unsigned CELL_COUNT = GRID_SIZE.x * GRID_SIZE.y * GRID_SIZE.z;
 
@@ -49,9 +41,9 @@ namespace WCA
 	extern Cell* Grid;
 	extern Cell* TGrid;
 	extern bool UpdateWallMesh;
+	extern bool UpdateWaterMesh;
 
 	void UpdateWCA();
 	void RenderWCA();
 	void InitWCA();
-	void InitGOLCA();
 }

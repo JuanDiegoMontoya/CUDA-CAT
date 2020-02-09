@@ -108,6 +108,7 @@ namespace Render
 		Shader::shaders["light"] = new Shader("light.vs", "light.fs");
 		Shader::shaders["skybox"] = new Shader("skybox.vs", "skybox.fs");
 		Shader::shaders["flat"] = new Shader("flat.vs", "flat.fs");
+		Shader::shaders["flatPhong"] = new Shader("flatPhong.vs", "flatPhong.fs");
 		//Shader::shaders["sun"] = new Shader("flat_sun.vs", "flat_sun.fs");
 
 		//Shader::shaders["phong_flat"] = new Shader("phong_flat.vs", "phong_flat.fs");

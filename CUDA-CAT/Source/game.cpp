@@ -7,6 +7,8 @@
 #include "imgui_impl.h"
 #include <algorithm>
 
+// bad, global
+float dt__;
 
 // initialize
 Game::Game(GLFWwindow* window)
@@ -32,6 +34,7 @@ void Game::Run()
 		float currFrame = (float)glfwGetTime();
 		static float oldFrame = 0;
 		dt_ = currFrame - oldFrame;
+		dt__ = dt_;
 		oldFrame = currFrame;
 
 		const float* clr = &level->GetBgColor()[0];
