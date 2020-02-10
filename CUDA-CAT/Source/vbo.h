@@ -1,6 +1,5 @@
 #pragma once
 
-#include "graphics_utils.h"
 
 class VBO
 {

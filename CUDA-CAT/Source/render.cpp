@@ -21,9 +21,6 @@ Renderer::Renderer() {}
 // initializes the gBuffer and its attached textures
 void Renderer::Init()
 {
-	//testFunc();
-	//WCA::InitWCA();
-	//WCA::InitGoLCA();
 	automaton->Init();
 }
 
@@ -51,9 +48,6 @@ void Renderer::DrawAll()
 	//WCA::RenderWCA();
 	automaton->Render();
 
-	auto view = Render::GetCamera()->GetView();
-	auto proj = Render::GetCamera()->GetProj();
-	auto skyView = glm::mat4(glm::mat3(view));
 	drawAxisIndicators();
 
 

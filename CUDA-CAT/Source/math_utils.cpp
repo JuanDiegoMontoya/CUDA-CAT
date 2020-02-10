@@ -85,16 +85,6 @@ namespace Utils
 		return (float)dist(rng);
 	}
 
-	// seeded with vector
-	float get_random_sv(glm::vec3 seed, float low, float high)
-	{
-		static std::random_device rd;
-		static std::mt19937 rng(rd());
-		rng.seed(ivec3Hash()(seed));
-		std::uniform_real_distribution<float> dist(low, high);
-		return (float)dist(rng);
-	}
-
 	glm::vec3 get_random_vec3_r(float low, float high)
 	{
 		static thread_local std::random_device rd;
@@ -104,29 +94,4 @@ namespace Utils
 		std::uniform_real_distribution<float> distribution3(low, high);
 		return glm::vec3(distribution1(generator), distribution2(generator), distribution3(generator));
 	}
-
-
-	// disregards color and width
-	//DebugLineData PointsToASLine(const glm::vec2& p1, const glm::vec2& p2)
-	//{
-	//	glm::vec2 line;
-	//	float angle;
-	//	float magnitude;
-
-	//	// uses distance formula to get the magnitude of the line
-	//	float x = (p2.x - p1.x);
-	//	float y = (p2.y - p1.y);
-	//	float xSqr = x * x;
-	//	float ySqr = y * y;
-	//	float C = std::sqrt(xSqr + ySqr);
-
-	//	line.x = (p1.x + p2.x) / 2.f;
-	//	line.y = (p1.y + p2.y) / 2.f;
-
-	//	angle = glm::atan(y, x);
-
-	//	magnitude = C;
-
-	//	return DebugLineData(glm::vec2(line.x, line.y), angle, magnitude, glm::vec3(1));
-	//}
 }

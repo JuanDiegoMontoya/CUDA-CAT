@@ -228,16 +228,13 @@ copy "$(SolutionDir)lib\CUDA\cudart64_102.dll" "$(TargetDir)cudart64_102.dll" /Y
     <ClCompile Include="CAMesh.cpp" />
     <ClCompile Include="CellularAutomata.cpp" />
     <ClCompile Include="debug.cpp" />
-    <ClCompile Include="game_object.cpp" />
     <CudaCompile Include="GoL.cu">
       <FileType>CppCode</FileType>
     </CudaCompile>
-    <ClCompile Include="line.cpp" />
     <ClCompile Include="settings.cpp" />
     <ClCompile Include="camera.cpp" />
     <ClCompile Include="engine_assert.cpp" />
     <ClCompile Include="game.cpp" />
-    <ClCompile Include="graphics_utils.cpp" />
     <ClCompile Include="ibo.cpp" />
     <ClCompile Include="imgui_impl.cpp" />
     <ClCompile Include="input.cpp" />
@@ -246,7 +243,6 @@ copy "$(SolutionDir)lib\CUDA\cudart64_102.dll" "$(TargetDir)cudart64_102.dll" /Y
     <ClCompile Include="main.cpp" />
     <ClCompile Include="math_utils.cpp" />
     <ClCompile Include="mesh.cpp" />
-    <ClCompile Include="misc_utils.cpp" />
     <ClCompile Include="pipeline.cpp" />
     <ClCompile Include="render.cpp" />
     <ClCompile Include="shader.cpp" />
@@ -322,13 +318,10 @@ copy "$(SolutionDir)lib\CUDA\cudart64_102.dll" "$(TargetDir)cudart64_102.dll" /Y
     <ClInclude Include="CellularAutomata.h" />
     <ClInclude Include="CommonDevice.cuh" />
     <ClInclude Include="debug.h" />
-    <ClInclude Include="game_object.h" />
     <ClInclude Include="GoL.h" />
-    <ClInclude Include="line.h" />
     <ClInclude Include="settings.h" />
     <ClInclude Include="engine_assert.h" />
     <ClInclude Include="game.h" />
-    <ClInclude Include="graphics_utils.h" />
     <ClInclude Include="ibo.h" />
     <ClInclude Include="imgui_impl.h" />
     <ClInclude Include="input.h" />
@@ -362,10 +355,6 @@ copy "$(SolutionDir)lib\CUDA\cudart64_102.dll" "$(TargetDir)cudart64_102.dll" /Y
     <ClInclude Include="waterCA.h" />
   </ItemGroup>
   <ItemGroup>
-    <CudaCompile Include="test.cu">
-      <FileType>Document</FileType>
-    </CudaCompile>
-    <CudaCompile Include="test.cuh" />
     <CudaCompile Include="waterCA.cu" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

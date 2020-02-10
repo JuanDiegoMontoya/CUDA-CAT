@@ -37,5 +37,5 @@ protected:
 	C* TGrid = nullptr;
 };
 
-// excuse this jank but it works for interfaces
+// excuse this jank but it works as an "interface
 typedef CellularAutomata<Cell, 0, 0, 0> CAInterface;

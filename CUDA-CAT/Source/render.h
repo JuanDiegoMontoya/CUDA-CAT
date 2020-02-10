@@ -1,15 +1,12 @@
 #pragma once
 #include <functional>
 #include "mesh.h"
-#include "line.h"
-#include "game_object.h"
 #include "GoL.h"
 
 class VAO;
 class IBO;
 class Shader;
 typedef std::function<void()> DrawCB;
-typedef std::function<void(const GameObject*)> ModelCB;
 
 // responsible for making stuff appear on the screen
 class Renderer

@@ -13,10 +13,6 @@
 #include <filesystem>
 #include "waterCA.h"
 
-using namespace std::chrono;
-using namespace std::filesystem;
-extern bool revolve; // CANCER GLOBAL
-
 Level::Level(std::string name)
 {
 	name_ = name;
@@ -33,13 +29,7 @@ void Level::Init()
 {
 	cameras_.push_back(new Camera(kControlCam));
 	Render::SetCamera(cameras_[0]);
-
-	high_resolution_clock::time_point benchmark_clock_ = high_resolution_clock::now();
-	
-	renderer_.Init();
-	
-	duration<double> benchmark_duration_ = duration_cast<duration<double>>(high_resolution_clock::now() - benchmark_clock_);
-	//std::cout << benchmark_duration_.count() << std::endl;
+	renderer_.Init();	
 }
 
 // update every object in the level
@@ -61,19 +51,7 @@ void Level::Update(float dt)
 void Level::DrawImGui()
 {
 	{
-		ImGui::Begin("Sun");
-
-		//int shadow = sun_.GetShadowSize().x;
-		//if (ImGui::InputInt("Shadow Scale", &shadow, 1024, 1024))
-		//{
-		//	glm::clamp(shadow, 0, 16384);
-		//	sun_.SetShadowSize(glm::ivec2(shadow));
-		//}
-		if (ImGui::Button("Recompile Debug Map"))
-		{
-			delete Shader::shaders["debug_map3"];
-			Shader::shaders["debug_map3"] = new Shader("debug_map.vs", "debug_map.fs");
-		}
+		ImGui::Begin("Shaders");
 		if (ImGui::Button("Recompile Postprocess Shader"))
 		{
 			//delete Shader::shaders["postprocess"];
