@@ -29,7 +29,7 @@ public:
 	glm::vec3 front = glm::vec3(0, 0, -1.f);
 private:
 	CameraType type_;
-	glm::vec3 worldpos_ = glm::vec3(10, 5, 10);
+	glm::vec3 worldpos_ = glm::vec3(150, 50, 100);
 	glm::vec3 dir_ = glm::vec3(-.63f, -.38f, -.67f);
 	glm::mat4 view_ = glm::mat4(1);
 	glm::mat4 proj_;

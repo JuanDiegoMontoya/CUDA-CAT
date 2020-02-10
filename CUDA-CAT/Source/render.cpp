@@ -9,7 +9,6 @@
 #include "input.h"
 #include "render.h"
 
-#include "tester.h"
 #include "waterCA.h"
 
 #include "GoL.h"

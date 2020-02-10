@@ -251,7 +251,6 @@ copy "$(SolutionDir)lib\CUDA\cudart64_102.dll" "$(TargetDir)cudart64_102.dll" /Y
     <ClCompile Include="render.cpp" />
     <ClCompile Include="shader.cpp" />
     <ClCompile Include="sys_window.cpp" />
-    <ClCompile Include="tester.cpp" />
     <ClCompile Include="texture.cpp" />
     <ClCompile Include="vao.cpp" />
     <ClCompile Include="vbo.cpp" />
@@ -343,7 +342,6 @@ copy "$(SolutionDir)lib\CUDA\cudart64_102.dll" "$(TargetDir)cudart64_102.dll" /Y
     <ClInclude Include="shader.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="sys_window.h" />
-    <ClInclude Include="tester.h" />
     <ClInclude Include="texture.h" />
     <ClInclude Include="utilities.h" />
     <ClInclude Include="vao.h" />
