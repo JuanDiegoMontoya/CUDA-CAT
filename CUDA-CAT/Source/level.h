@@ -29,5 +29,5 @@ private:
 	//glm::vec3 bgColor_ = glm::vec3(.529f, .808f, .922f); // sky blue
 	glm::vec3 bgColor_ = glm::vec3(0, .2, .4); // midnight blue
 	
-	bool activeCursor = false;
+	bool activeCursor = true;
 }Level, *LevelPtr;

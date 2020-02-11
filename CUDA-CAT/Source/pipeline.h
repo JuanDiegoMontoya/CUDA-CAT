@@ -1,6 +1,7 @@
 #pragma once
 
 typedef class Level* LevelPtr;
+class Camera;
 
 namespace Render
 {
@@ -12,7 +13,7 @@ namespace Render
 	void Draw(LevelPtr level);
 	void drawImGui();
 	void SetCamera(class Camera* cam);
-	class Camera* GetCamera();
+	Camera* GetCamera();
 
 	static const GLfloat cube_vertices_light[] =
 	{

@@ -77,6 +77,8 @@ void Level::DrawImGui()
 			Render::GetCamera()->SetPos(pos);
 		pos = Render::GetCamera()->front;
 		ImGui::Text("Camera Direction: (%.2f, %.2f, %.2f)", pos.x, pos.y, pos.z);
+		glm::vec3 eu = Render::GetCamera()->GetEuler();
+		ImGui::Text("Euler Angles: %.0f, %.0f, %.0f", eu.x, eu.y, eu.z);
 		pos = pos * .5f + .5f;
 		ImGui::SameLine();
 		ImGui::ColorButton("visualization", ImVec4(pos.x, pos.y, pos.z, 1.f));
@@ -93,9 +95,9 @@ void Level::DrawImGui()
 		ImGui::Begin("CA Simulation");
 		ImGui::Checkbox("Pause Simulation", &renderer_.pauseSimulation);
 		ImGui::SliderFloat("s/Update", &renderer_.updateFrequency, 0, 1, "%.2f");
-		if (ImGui::Button("Re-init Simulation"))
-			WCA::InitWCA();
-		if (ImGui::Button("Re-init GoL"))
+		//if (ImGui::Button("Re-init Simulation"))
+		//	WCA::InitWCA();
+		if (ImGui::Button("Re-init Sim"))
 			renderer_.automaton->Init();
 		if (ImGui::Button("1x Update Simulation"))
 			renderer_.automaton->Update();
@@ -107,4 +109,5 @@ void Level::DrawImGui()
 				renderer_.automaton->Update();
 		ImGui::End();
 	}
+
 }

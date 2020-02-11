@@ -2,6 +2,7 @@
 #include <functional>
 #include "mesh.h"
 #include "GoL.h"
+#include "CaveGen.h"
 
 class VAO;
 class IBO;
@@ -38,7 +39,8 @@ public:
 	float timeCount = 0;
 	GameOfLife<50, 50, 50> GoL;
 	GameOfLife<200, 200, 1> GoL2;
-	CAInterface* automaton = reinterpret_cast<CAInterface*>(&GoL2);
+	CaveGen<200, 200, 1> Caver;
+	CAInterface* automaton = reinterpret_cast<CAInterface*>(&Caver);
 
 private:
 	void drawQuad();

@@ -26,7 +26,7 @@ __device__ bool inBoundary(glm::ivec3 p)
 }
 
 __device__
-bool inBound(int a, int b)
+inline bool inBound(int a, int b)
 {
 	return a >= 0 && a < b;
 }

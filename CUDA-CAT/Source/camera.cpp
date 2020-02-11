@@ -6,6 +6,12 @@
 Camera::Camera(CameraType type) : type_(type) 
 {
 	proj_ = glm::perspective(glm::radians(fov_), 1920.f / 1080.f, near_, far_);
+	glm::vec3 temp;
+	temp.x = cos(glm::radians(pitch_)) * cos(glm::radians(yaw_));
+	temp.y = sin(glm::radians(pitch_));
+	temp.z = cos(glm::radians(pitch_)) * sin(glm::radians(yaw_));
+	front = glm::normalize(temp);
+	view_ = glm::lookAt(worldpos_, worldpos_ + front, up);
 }
 
 // update movement and generate view matrix

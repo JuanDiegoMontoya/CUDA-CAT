@@ -1,20 +1,21 @@
 #include "stdafx.h"
-#include "GoL.h"
+#include "CaveGen.h"
 
 #include "shader.h"
 #include "camera.h"
 #include "pipeline.h"
 #include "mesh.h"
+#include "utilities.h"
 
 #include "CommonDevice.cuh"
 #define FLATTEN(x, y, z) (x + y * X + z * X * Y)
 #define FLATTENV(p) (FLATTEN(p.x, p.y, p.z))
 
-template class GameOfLife<50, 50, 50>;
-template class GameOfLife<200, 200, 1>;
+template class CaveGen<50, 50, 1>;
+template class CaveGen<200, 200, 1>;
 
 template<int X, int Y, int Z>
-__global__ static void updateGridGOL(GoLCell* grid, GoLCell* tempGrid, GoLRule r)
+__global__ static void updateGridCave(CaveCell* grid, CaveCell* tempGrid, int T, int M)
 {
 	int index = blockIdx.x * blockDim.x + threadIdx.x;
 	int stride = blockDim.x * gridDim.x;
@@ -22,58 +23,48 @@ __global__ static void updateGridGOL(GoLCell* grid, GoLCell* tempGrid, GoLRule r
 
 	for (int i = index; i < n; i += stride)
 	{
-		bool thisAlive = grid[i].Alive;
+		bool thisRock = grid[i].Rock;
 		bool nextState;
 		glm::ivec3 thisPos = expand<X, Y>(i);
-		int env = thisAlive ? -1 : 0; // un-count self if alive
-		
+		int env = thisRock ? -1 : 0; // un-count self if alive
+
 		// iterate each of 26 neighbors, checking their living status if they exist
-		for (int z = -1; z <= 1; z++)
+		for (int z = -M; z <= M; z++)
 		{
 			//if (!inBound(z, GRID_SIZE_Z)) continue;
 			//int zPart = z * GRID_SIZE_Y * GRID_SIZE_Z;
-			for (int y = -1; y <= 1; y++)
+			for (int y = -M; y <= M; y++)
 			{
 				//if (!inBound(y, GRID_SIZE_Y)) continue;
 				//int yzPart = y * GRID_SIZE_Y + zPart;
-				for (int x = -1; x <= 1; x++)
+				for (int x = -M; x <= M; x++)
 				{
 					//if (!inBound(x, GRID_SIZE_X)) continue;
 					//int fIndex = x + yzPart;
 					glm::ivec3 nPos = thisPos + glm::ivec3(x, y, z);
 					if (!inBoundary<X, Y, Z>(nPos)) continue;
 					int fIndex = flatten<X, Y>(nPos);
-					if (grid[fIndex].Alive == true)
+					if (grid[fIndex].Rock == true)
 						env++;
 				}
 			}
 		}
 
-		if (thisAlive)
-		{
-			if (env >= r.eL && env <= r.eH)
-				nextState = true;
-			else
-				nextState = false;
-		}
-		else // this cell is currently dead
-		{
-			if (env >= r.fL && env <= r.fH)
-				nextState = true;
-			else
-				nextState = false;
-		}
+		if (env >= T)
+			nextState = true;
+		else
+			nextState = false;
 
-		tempGrid[i].Alive = nextState;
+		tempGrid[i].Rock = nextState;
 	}
 }
 
 
 template<int X, int Y, int Z>
-void GameOfLife<X, Y, Z>::Init()
+void CaveGen<X, Y, Z>::Init()
 {
-	cudaMallocManaged(&this->Grid, X * Y * Z * sizeof(GoLCell));
-	cudaMallocManaged(&this->TGrid, X * Y * Z * sizeof(GoLCell));
+	cudaMallocManaged(&this->Grid, X * Y * Z * sizeof(CaveCell));
+	cudaMallocManaged(&this->TGrid, X * Y * Z * sizeof(CaveCell));
 
 	// populate the grid with water and walls
 	for (int z = 0; z < Z; z++)
@@ -87,7 +78,9 @@ void GameOfLife<X, Y, Z>::Init()
 				// compute final part of flattened index
 				int index = x + yzPart;
 
-				this->Grid[index].Alive = rand() % 2 == 0;
+				
+				this->Grid[index].Rock = Utils::get_random(0, 1) < r;
+				//this->Grid[index].Rock = rand() % 50 == 0;
 			}
 		}
 	}
@@ -97,19 +90,16 @@ void GameOfLife<X, Y, Z>::Init()
 		this->TGrid[i] = this->Grid[i];
 
 	genMesh();
+
+	//for (int i = 0; i < n; i++)
+	//	Update();
 }
 
 
 template<int X, int Y, int Z>
-void GameOfLife<X, Y, Z>::Update()
+void CaveGen<X, Y, Z>::Update()
 {
-	GoLRule r1 = { 10, 21, 10, 21 };
-	GoLRule r2 = { 4, 5, 2, 6 };
-	GoLRule r3 = { 5, 7, 6, 6 };
-	GoLRule r4 = { 4, 5, 5, 5 };
-	GoLRule r5 = { 3, 3, 3, 3 };
-	GoLRule rog = { 2, 3, 3, 3 };
-	updateGridGOL<X, Y, Z> <<<numBlocks, blockSize>>>(this->Grid, this->TGrid, rog);
+	updateGridCave<X, Y, Z><<<numBlocks, blockSize>>>(this->Grid, this->TGrid, T, M);
 	cudaDeviceSynchronize();
 
 	// TGrid contains updated grid values after update
@@ -121,7 +111,7 @@ void GameOfLife<X, Y, Z>::Update()
 
 
 template<int X, int Y, int Z>
-void GameOfLife<X, Y, Z>::Render()
+void CaveGen<X, Y, Z>::Render()
 {
 	if (this->UpdateMesh)
 		genMesh(), this->UpdateMesh = false;
@@ -131,14 +121,33 @@ void GameOfLife<X, Y, Z>::Render()
 	sr->setMat4("u_proj", Render::GetCamera()->GetProj());
 	sr->setMat4("u_view", Render::GetCamera()->GetView());
 	sr->setMat4("u_model", glm::mat4(1));
-	sr->setVec3("u_color", { 0, .4, .9 });
+	sr->setVec3("u_color", { .9, .4, .4 });
 	sr->setVec3("u_viewpos", Render::GetCamera()->GetPos());
 
 	this->mesh_->Draw();
+
+	{
+		// DANGEROUS IF AUTOMATON IS NOT A CAVEGEN
+		ImGui::Begin("Cave Generator");
+		auto caver = this;
+		ImGui::SliderFloat("r (starting rock %)", &caver->r, 0, 1, "%.2f");
+		ImGui::SliderInt("n (num iterations)", &caver->n, 0, 6);
+		ImGui::InputInt("T (threshold)", &caver->T);
+		ImGui::SliderInt("M (neighborhood)", &caver->M, 1, 4);
+		ImGui::Separator();
+		if (ImGui::Button("Generate"))
+		{
+			caver->Init();
+			for (int i = 0; i < caver->n; i++)
+				caver->Update();
+		}
+		ImGui::End();
+	}
 }
 
+
 template<int X, int Y, int Z>
-void GameOfLife<X, Y, Z>::genMesh()
+void CaveGen<X, Y, Z>::genMesh()
 {
 	delete this->mesh_;
 	std::vector<Vertex> vertices;
@@ -155,7 +164,7 @@ void GameOfLife<X, Y, Z>::genMesh()
 				int index = x + yzpart;
 
 				// skip empty cells
-				if (this->Grid[index].Alive == 0)
+				if (this->Grid[index].Rock == false)
 					continue;
 
 				// iterate faces of cells
@@ -173,8 +182,8 @@ void GameOfLife<X, Y, Z>::genMesh()
 						AddQuad({ x, y, z }, f, vertices, indices);
 						continue;
 					}
-					const GoLCell& nearCell = this->Grid[FLATTENV(ncp)];
-					if (nearCell.Alive != 0) // skip opposing faces
+					const auto& nearCell = this->Grid[FLATTENV(ncp)];
+					if (nearCell.Rock == true) // skip opposing faces
 						continue;
 					AddQuad({ x, y, z }, f, vertices, indices);
 				}

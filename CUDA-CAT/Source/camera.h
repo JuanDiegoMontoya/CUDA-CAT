@@ -22,6 +22,7 @@ public:
 	inline const float GetFov() const { return fov_; }
 	inline const float GetNear() const { return near_; }
 	inline const float GetFar() const { return far_; }
+	inline const glm::vec3 GetEuler() const { return { pitch_, yaw_, roll_ }; }
 
 	inline void SetPos(const glm::vec3& v) { worldpos_ = v; }
 
@@ -30,15 +31,15 @@ public:
 private:
 	CameraType type_;
 	glm::vec3 worldpos_ = glm::vec3(150, 50, 100);
-	glm::vec3 dir_ = glm::vec3(-.63f, -.38f, -.67f);
+	glm::vec3 dir_ = glm::vec3(-.22f, .22f, -.95f);
 	glm::mat4 view_ = glm::mat4(1);
 	glm::mat4 proj_;
 	Frustum* frustum_;
 
 	float speed_ = 3.5f;
 
-	float pitch_ = -25;
-	float yaw_ = 220;
+	float pitch_ = 16;
+	float yaw_ = 255;
 	float roll_ = 0;
 	float fov_ = 80.f;
 
