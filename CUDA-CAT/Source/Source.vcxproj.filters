@@ -233,9 +233,6 @@
     <ClCompile Include="CAMesh.cpp">
       <Filter>CA</Filter>
     </ClCompile>
-    <ClCompile Include="CellularAutomata.cpp">
-      <Filter>CA</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="waterCA.cu">
@@ -245,6 +242,9 @@
       <Filter>CA</Filter>
     </CudaCompile>
     <CudaCompile Include="CaveGen.cu">
+      <Filter>CA</Filter>
+    </CudaCompile>
+    <CudaCompile Include="CellularAutomata.cuh">
       <Filter>CA</Filter>
     </CudaCompile>
   </ItemGroup>

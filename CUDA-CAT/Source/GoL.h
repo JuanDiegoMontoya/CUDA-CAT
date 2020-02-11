@@ -29,4 +29,12 @@ public:
 
 private:
 	virtual void genMesh() override;
+
+	const GoLRule r1 = { 10, 21, 10, 21 };
+	const GoLRule r2 = { 4, 5, 2, 6 };
+	const GoLRule r3 = { 5, 7, 6, 6 };
+	const GoLRule r4 = { 4, 5, 5, 5 };
+	const GoLRule r5 = { 3, 3, 3, 3 };
+	const GoLRule rog = { 2, 3, 3, 3 };
+	GoLRule currRule = rog;
 };

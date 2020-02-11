@@ -1,4 +1,5 @@
 #pragma once
+#include "cuda_runtime.h"
 
 struct Cell
 {
@@ -21,6 +22,17 @@ class CellularAutomata
 {
 public:
 	//CellularAutomata(int X, int Y, int Z) : numBlocks((X* Y* Z + blockSize - 1) / blockSize) {}
+	CellularAutomata()
+	{
+		cudaMallocManaged(&this->Grid, X * Y * Z * sizeof(GoLCell));
+		cudaMallocManaged(&this->TGrid, X * Y * Z * sizeof(GoLCell));
+	}
+	~CellularAutomata()
+	{
+		cudaFree(Grid);
+		cudaFree(TGrid);
+	}
+
 	virtual void Init() {}
 	virtual void Update() {}
 	virtual void Render() {}

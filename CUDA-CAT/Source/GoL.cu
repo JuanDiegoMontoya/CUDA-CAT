@@ -72,9 +72,6 @@ __global__ static void updateGridGOL(GoLCell* grid, GoLCell* tempGrid, GoLRule r
 template<int X, int Y, int Z>
 void GameOfLife<X, Y, Z>::Init()
 {
-	cudaMallocManaged(&this->Grid, X * Y * Z * sizeof(GoLCell));
-	cudaMallocManaged(&this->TGrid, X * Y * Z * sizeof(GoLCell));
-
 	// populate the grid with water and walls
 	for (int z = 0; z < Z; z++)
 	{
@@ -103,13 +100,7 @@ void GameOfLife<X, Y, Z>::Init()
 template<int X, int Y, int Z>
 void GameOfLife<X, Y, Z>::Update()
 {
-	GoLRule r1 = { 10, 21, 10, 21 };
-	GoLRule r2 = { 4, 5, 2, 6 };
-	GoLRule r3 = { 5, 7, 6, 6 };
-	GoLRule r4 = { 4, 5, 5, 5 };
-	GoLRule r5 = { 3, 3, 3, 3 };
-	GoLRule rog = { 2, 3, 3, 3 };
-	updateGridGOL<X, Y, Z> <<<numBlocks, blockSize>>>(this->Grid, this->TGrid, rog);
+	updateGridGOL<X, Y, Z> <<<numBlocks, blockSize>>>(this->Grid, this->TGrid, currRule);
 	cudaDeviceSynchronize();
 
 	// TGrid contains updated grid values after update
@@ -131,10 +122,36 @@ void GameOfLife<X, Y, Z>::Render()
 	sr->setMat4("u_proj", Render::GetCamera()->GetProj());
 	sr->setMat4("u_view", Render::GetCamera()->GetView());
 	sr->setMat4("u_model", glm::mat4(1));
-	sr->setVec3("u_color", { 0, .4, .9 });
+	sr->setVec3("u_color", { .9, .4, .4 });
 	sr->setVec3("u_viewpos", Render::GetCamera()->GetPos());
 
 	this->mesh_->Draw();
+
+	{
+		// DANGEROUS IF AUTOMATON IS NOT A CAVEGEN
+		ImGui::Begin("Game of Life");
+		auto caver = this;
+		ImGui::PushItemWidth(150);
+		ImGui::SliderInt("Low Env", &currRule.eL, 0, 26);
+		ImGui::SliderInt("High Env", &currRule.eH, 0, 26);
+		ImGui::SliderInt("Low Fert", &currRule.fL, 0, 26);
+		ImGui::SliderInt("High Fert", &currRule.fH, 0, 26);
+		ImGui::Separator();
+		ImGui::Text("Presets");
+		if (ImGui::Button("10, 21, 10, 21"))
+			currRule = r1;
+		if (ImGui::Button("4, 5, 2, 6"))
+			currRule = r2;
+		if (ImGui::Button("5, 7, 6, 6"))
+			currRule = r3;
+		if (ImGui::Button("4, 5, 5, 5"))
+			currRule = r4;
+		if (ImGui::Button("3, 3, 3, 3"))
+			currRule = r5;
+		if (ImGui::Button("2, 3, 3, 3"))
+			currRule = rog;
+		ImGui::End();
+	}
 }
 
 template<int X, int Y, int Z>

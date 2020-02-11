@@ -63,9 +63,6 @@ __global__ static void updateGridCave(CaveCell* grid, CaveCell* tempGrid, int T,
 template<int X, int Y, int Z>
 void CaveGen<X, Y, Z>::Init()
 {
-	cudaMallocManaged(&this->Grid, X * Y * Z * sizeof(CaveCell));
-	cudaMallocManaged(&this->TGrid, X * Y * Z * sizeof(CaveCell));
-
 	// populate the grid with water and walls
 	for (int z = 0; z < Z; z++)
 	{
@@ -130,9 +127,22 @@ void CaveGen<X, Y, Z>::Render()
 		// DANGEROUS IF AUTOMATON IS NOT A CAVEGEN
 		ImGui::Begin("Cave Generator");
 		auto caver = this;
+		ImGui::PushItemWidth(150);
 		ImGui::SliderFloat("r (starting rock %)", &caver->r, 0, 1, "%.2f");
 		ImGui::SliderInt("n (num iterations)", &caver->n, 0, 6);
 		ImGui::InputInt("T (threshold)", &caver->T);
+		ImGui::SameLine();
+		if (ImGui::Button("Suggest"))
+		{
+			switch (caver->M)
+			{
+			case 1: caver->T = 5; break;
+			case 2: caver->T = 13; break;
+			case 3: caver->T = 25; break;
+			case 4: caver->T = 41; break;
+			default: caver->T = 0; break;
+			}
+		}
 		ImGui::SliderInt("M (neighborhood)", &caver->M, 1, 4);
 		ImGui::Separator();
 		if (ImGui::Button("Generate"))

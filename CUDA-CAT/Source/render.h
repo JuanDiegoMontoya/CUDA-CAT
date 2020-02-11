@@ -40,7 +40,7 @@ public:
 	GameOfLife<50, 50, 50> GoL;
 	GameOfLife<200, 200, 1> GoL2;
 	CaveGen<200, 200, 1> Caver;
-	CAInterface* automaton = reinterpret_cast<CAInterface*>(&Caver);
+	CAInterface* automaton = reinterpret_cast<CAInterface*>(&GoL);
 
 private:
 	void drawQuad();

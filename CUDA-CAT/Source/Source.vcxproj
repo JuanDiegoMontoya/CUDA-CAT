@@ -191,7 +191,7 @@ copy "$(SolutionDir)lib\freetype\lib\win32\freetype.dll" "$(TargetDir)freetype.d
     <ClCompile>
       <PrecompiledHeader>Create</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <Optimization>Disabled</Optimization>
+      <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
@@ -226,7 +226,9 @@ copy "$(SolutionDir)lib\CUDA\cudart64_102.dll" "$(TargetDir)cudart64_102.dll" /Y
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="CAMesh.cpp" />
-    <ClCompile Include="CellularAutomata.cpp" />
+    <CudaCompile Include="CellularAutomata.cuh">
+      <FileType>CppCode</FileType>
+    </CudaCompile>
     <ClCompile Include="debug.cpp" />
     <CudaCompile Include="CaveGen.cu" />
     <CudaCompile Include="GoL.cu">
