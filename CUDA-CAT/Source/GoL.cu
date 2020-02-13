@@ -6,9 +6,8 @@
 #include "pipeline.h"
 #include "mesh.h"
 
+#include "CAMesh.h"
 #include "CommonDevice.cuh"
-#define FLATTEN(x, y, z) (x + y * X + z * X * Y)
-#define FLATTENV(p) (FLATTEN(p.x, p.y, p.z))
 
 template class GameOfLife<50, 50, 50>;
 template class GameOfLife<200, 200, 1>;
@@ -128,9 +127,7 @@ void GameOfLife<X, Y, Z>::Render()
 	this->mesh_->Draw();
 
 	{
-		// DANGEROUS IF AUTOMATON IS NOT A CAVEGEN
 		ImGui::Begin("Game of Life");
-		auto caver = this;
 		ImGui::PushItemWidth(150);
 		ImGui::SliderInt("Low Env", &currRule.eL, 0, 26);
 		ImGui::SliderInt("High Env", &currRule.eH, 0, 26);
@@ -138,6 +135,7 @@ void GameOfLife<X, Y, Z>::Render()
 		ImGui::SliderInt("High Fert", &currRule.fH, 0, 26);
 		ImGui::Separator();
 		ImGui::Text("Presets");
+		// https://wpmedia.wolfram.com/uploads/sites/13/2018/02/01-3-1.pdf
 		if (ImGui::Button("10, 21, 10, 21"))
 			currRule = r1;
 		if (ImGui::Button("4, 5, 2, 6"))
@@ -161,43 +159,13 @@ void GameOfLife<X, Y, Z>::genMesh()
 	std::vector<Vertex> vertices;
 	std::vector<GLuint> indices;
 
-	for (int z = 0; z < Z; z++)
+	auto skip = [](const GoLCell& elem)->bool
 	{
-		int zpart = z * X * Y;
-		for (int y = 0; y < Y; y++)
-		{
-			int yzpart = zpart + y * X;
-			for (int x = 0; x < X; x++)
-			{
-				int index = x + yzpart;
-
-				// skip empty cells
-				if (this->Grid[index].Alive == 0)
-					continue;
-
-				// iterate faces of cells
-				for (int f = 0; f < 6; f++)
-				{
-					const auto& normal = faces[f];
-
-					// near cell pos
-					glm::ivec3 ncp(x + normal.x, y + normal.y, z + normal.z);
-					if ( // generate quad if near cell would be OOB
-						ncp.x < 0 || ncp.x > X - 1 ||
-						ncp.y < 0 || ncp.y > Y - 1 ||
-						ncp.z < 0 || ncp.z > Z - 1)
-					{
-						AddQuad({ x, y, z }, f, vertices, indices);
-						continue;
-					}
-					const GoLCell& nearCell = this->Grid[FLATTENV(ncp)];
-					if (nearCell.Alive != 0) // skip opposing faces
-						continue;
-					AddQuad({ x, y, z }, f, vertices, indices);
-				}
-			}
-		}
-	}
-
-	this->mesh_ = new Mesh(vertices, indices, std::vector<Texture>());
+		return !elem.Alive;
+	};
+	auto height = [](const GoLCell& elem)->float
+	{
+		return static_cast<float>(!!elem.Alive); // 1 or 0 height
+	};
+	mesh_ = GenVoxelMesh(this->Grid, X, Y, Z, skip, height);
 }

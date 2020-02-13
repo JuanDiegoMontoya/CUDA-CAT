@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "CaveGen.h"
+#include "PipeWater.h"
 
 #include "shader.h"
 #include "camera.h"
@@ -10,13 +10,18 @@
 #include "CAMesh.h"
 #include "CommonDevice.cuh"
 
-template class CaveGen<50, 50, 1>;
-template class CaveGen<200, 200, 1>;
-template class CaveGen<50, 50, 50>;
-template class CaveGen<200, 50, 200>;
+template class PipeWater<200, 1, 200>;
+
+// ######################################################
+// ######################################################
+// ######################################################
+//               TODO: THIS WHOLE FILE
+// ######################################################
+// ######################################################
+// ######################################################
 
 template<int X, int Y, int Z>
-__global__ static void updateGridCave(CaveCell* grid, CaveCell* tempGrid, int T, int M)
+__global__ static void updateGridWater(WaterCell* grid, WaterCell* tempGrid, int T, int M)
 {
 	int index = blockIdx.x * blockDim.x + threadIdx.x;
 	int stride = blockDim.x * gridDim.x;
@@ -24,10 +29,10 @@ __global__ static void updateGridCave(CaveCell* grid, CaveCell* tempGrid, int T,
 
 	for (int i = index; i < n; i += stride)
 	{
-		bool thisRock = grid[i].Rock;
+		//bool thisRock = grid[i].Rock;
 		bool nextState;
 		glm::ivec3 thisPos = expand<X, Y>(i);
-		int env = thisRock ? -1 : 0; // un-count self if alive
+		//int env = thisRock ? -1 : 0; // un-count self if alive
 
 		// iterate each of 26 neighbors, checking their living status if they exist
 		for (int z = -M; z <= M; z++)
@@ -45,24 +50,23 @@ __global__ static void updateGridCave(CaveCell* grid, CaveCell* tempGrid, int T,
 					glm::ivec3 nPos = thisPos + glm::ivec3(x, y, z);
 					if (!inBoundary<X, Y, Z>(nPos)) continue;
 					int fIndex = flatten<X, Y>(nPos);
-					if (grid[fIndex].Rock == true)
-						env++;
+					
 				}
 			}
 		}
 
-		if (env >= T)
-			nextState = true;
-		else
-			nextState = false;
+		//if (env >= T)
+		//	nextState = true;
+		//else
+		//	nextState = false;
 
-		tempGrid[i].Rock = nextState;
+		//tempGrid[i].Rock = nextState;
 	}
 }
 
 
 template<int X, int Y, int Z>
-void CaveGen<X, Y, Z>::Init()
+void PipeWater<X, Y, Z>::Init()
 {
 	// populate the grid with water and walls
 	for (int z = 0; z < Z; z++)
@@ -76,7 +80,7 @@ void CaveGen<X, Y, Z>::Init()
 				// compute final part of flattened index
 				int index = x + yzPart;
 
-				this->Grid[index].Rock = Utils::get_random(0, 1) < r;
+				this->Grid[index].depth = Utils::get_random(0, 1);
 			}
 		}
 	}
@@ -90,9 +94,9 @@ void CaveGen<X, Y, Z>::Init()
 
 
 template<int X, int Y, int Z>
-void CaveGen<X, Y, Z>::Update()
+void PipeWater<X, Y, Z>::Update()
 {
-	updateGridCave<X, Y, Z><<<numBlocks, blockSize>>>(this->Grid, this->TGrid, T, M);
+	updateGridWater<X, Y, Z><<<numBlocks, blockSize>>>(this->Grid, this->TGrid, 1, 1);
 	cudaDeviceSynchronize();
 
 	// TGrid contains updated grid values after update
@@ -104,7 +108,7 @@ void CaveGen<X, Y, Z>::Update()
 
 
 template<int X, int Y, int Z>
-void CaveGen<X, Y, Z>::Render()
+void PipeWater<X, Y, Z>::Render()
 {
 	if (this->UpdateMesh)
 		genMesh(), this->UpdateMesh = false;
@@ -114,73 +118,33 @@ void CaveGen<X, Y, Z>::Render()
 	sr->setMat4("u_proj", Render::GetCamera()->GetProj());
 	sr->setMat4("u_view", Render::GetCamera()->GetView());
 	sr->setMat4("u_model", glm::mat4(1));
-	sr->setVec3("u_color", { .9, .4, .4 });
+	sr->setVec3("u_color", { .2, .7, .9 });
 	sr->setVec3("u_viewpos", Render::GetCamera()->GetPos());
 
 	this->mesh_->Draw();
 
 	{
 		// DANGEROUS IF AUTOMATON IS NOT A CAVEGEN
-		ImGui::Begin("Cave Generator");
-		auto caver = this;
-		ImGui::PushItemWidth(150);
-		ImGui::SliderFloat("r (starting rock %)", &caver->r, 0, 1, "%.2f");
-		ImGui::SliderInt("n (num iterations)", &caver->n, 0, 6);
-		ImGui::InputInt("T (threshold)", &caver->T);
-		ImGui::SameLine();
-		if (ImGui::Button("Suggest"))
-		{
-			// 2D case
-			if (X == 1 || Y == 1 || Z == 1)
-			{
-				switch (caver->M)
-				{
-				case 1: caver->T = 5; break;
-				case 2: caver->T = 13; break;
-				case 3: caver->T = 25; break;
-				case 4: caver->T = 41; break;
-				default: caver->T = 0;
-				}
-			}
-			else // 3D
-			{
-				switch (caver->M)
-				{
-				case 1: caver->T = 14; break;
-				case 2: caver->T = 64; break;
-				case 3: caver->T = 173; break;
-				case 4: caver->T = 364; break;
-				default: caver->T = 0;
-				}
-			}
-		}
-		ImGui::SliderInt("M (neighborhood)", &caver->M, 1, 4);
-		ImGui::Separator();
-		if (ImGui::Button("Generate"))
-		{
-			caver->Init();
-			for (int i = 0; i < caver->n; i++)
-				caver->Update();
-		}
+		ImGui::Begin("Piped Water Simulation");
 		ImGui::End();
 	}
 }
 
 
 template<int X, int Y, int Z>
-void CaveGen<X, Y, Z>::genMesh()
+void PipeWater<X, Y, Z>::genMesh()
 {
 	delete this->mesh_;
 	std::vector<Vertex> vertices;
 	std::vector<GLuint> indices;
 
-	auto skip = [](const CaveCell& elem)->bool
+	auto skip = [](const WaterCell& elem)->bool
 	{
-		return !elem.Rock;
+		return elem.depth == 0;
 	};
-	auto height = [](const CaveCell& elem)->float
+	auto height = [](const WaterCell& elem)->float
 	{
-		return static_cast<float>(!!elem.Rock); // 1 or 0 height
+		return elem.depth;
 	};
 	mesh_ = GenVoxelMesh(this->Grid, X, Y, Z, skip, height);
 }

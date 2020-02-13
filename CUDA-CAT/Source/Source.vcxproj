@@ -225,10 +225,9 @@ copy "$(SolutionDir)lib\CUDA\cudart64_102.dll" "$(TargetDir)cudart64_102.dll" /Y
     <CudaCompile />
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="CAMesh.cpp" />
-    <CudaCompile Include="CellularAutomata.cuh">
+    <ClCompile Include="CellularAutomata.cpp">
       <FileType>CppCode</FileType>
-    </CudaCompile>
+    </ClCompile>
     <ClCompile Include="debug.cpp" />
     <CudaCompile Include="CaveGen.cu" />
     <CudaCompile Include="GoL.cu">
@@ -322,6 +321,7 @@ copy "$(SolutionDir)lib\CUDA\cudart64_102.dll" "$(TargetDir)cudart64_102.dll" /Y
     <ClInclude Include="CommonDevice.cuh" />
     <ClInclude Include="debug.h" />
     <ClInclude Include="GoL.h" />
+    <ClInclude Include="PipeWater.h" />
     <ClInclude Include="settings.h" />
     <ClInclude Include="engine_assert.h" />
     <ClInclude Include="game.h" />
@@ -358,6 +358,7 @@ copy "$(SolutionDir)lib\CUDA\cudart64_102.dll" "$(TargetDir)cudart64_102.dll" /Y
     <ClInclude Include="waterCA.h" />
   </ItemGroup>
   <ItemGroup>
+    <CudaCompile Include="PipeWater.cu" />
     <CudaCompile Include="waterCA.cu" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

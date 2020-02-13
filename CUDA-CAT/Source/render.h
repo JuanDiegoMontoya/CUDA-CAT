@@ -3,6 +3,7 @@
 #include "mesh.h"
 #include "GoL.h"
 #include "CaveGen.h"
+#include "PipeWater.h"
 
 class VAO;
 class IBO;
@@ -20,13 +21,6 @@ public:
 	void DrawAll();
 	void Clear();
 
-	bool renderShadows = true;
-	bool doGeometryPass = true; // for ssr currently
-	//bool renderSSR = true;
-
-	// other stuff
-	bool revolve = true;
-
 	// pp effects
 	bool ppSharpenFilter = false;
 	bool ppBlurFilter = false;
@@ -40,7 +34,10 @@ public:
 	GameOfLife<50, 50, 50> GoL;
 	GameOfLife<200, 200, 1> GoL2;
 	CaveGen<200, 200, 1> Caver;
-	CAInterface* automaton = reinterpret_cast<CAInterface*>(&GoL);
+	CaveGen<50, 50, 50> Caver2;
+	CaveGen<200, 50, 200> Caver3;
+	PipeWater<200, 1, 200> Water;
+	CAInterface* automaton = reinterpret_cast<CAInterface*>(&Water);
 
 private:
 	void drawQuad();

@@ -152,6 +152,9 @@
     <ClInclude Include="CaveGen.h">
       <Filter>CA</Filter>
     </ClInclude>
+    <ClInclude Include="PipeWater.h">
+      <Filter>CA</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="sys_window.cpp">
@@ -230,7 +233,7 @@
       <Filter>Debug</Filter>
     </ClCompile>
     <ClCompile Include="settings.cpp" />
-    <ClCompile Include="CAMesh.cpp">
+    <ClCompile Include="CellularAutomata.cpp">
       <Filter>CA</Filter>
     </ClCompile>
   </ItemGroup>
@@ -244,7 +247,7 @@
     <CudaCompile Include="CaveGen.cu">
       <Filter>CA</Filter>
     </CudaCompile>
-    <CudaCompile Include="CellularAutomata.cuh">
+    <CudaCompile Include="PipeWater.cu">
       <Filter>CA</Filter>
     </CudaCompile>
   </ItemGroup>
