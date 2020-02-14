@@ -44,9 +44,9 @@ inline bool inBound(int a, int b)
 }
 
 template<typename T>
-__device__ void swap(T& a, T& b)
+__device__ __host__ void swap(T& a, T& b)
 {
-	T tmp = a;
-	a = b;
-	b = tmp;
+	T tmp = std::move(a);
+	a = std::move(b);
+	b = std::move(tmp);
 }

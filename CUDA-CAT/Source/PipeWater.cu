@@ -10,9 +10,9 @@
 #include "CAMesh.h"
 #include "CommonDevice.cuh"
 
-template class PipeWater<200, 1, 200>;
-template class PipeWater<1, 1, 10>;
-template class PipeWater<10, 1, 1>;
+//template class PipeWater<200, 1, 200>;
+//template class PipeWater<1, 1, 10>;
+//template class PipeWater<10, 1, 1>;
 template class PipeWater<10, 1, 10>;
 
 // ######################################################
@@ -49,11 +49,15 @@ __global__ static void updateGridWater(WaterCell* grid, WaterCell* tempGrid, Pip
 		// tp.y is Z POSITION (vec2 constraint)
 		// add flow from left INTO this cell
 		// (vec2->pipe)
-		sumflow += hPGrid[flatten<X+1>({ tp.y, tp.x })].flow;
+		//sumflow += hPGrid[flatten<X+1>({ tp.y, tp.x })].flow;
 		// subtract flow TO right cell
-		sumflow -= hPGrid[flatten<X+1>({ tp.y + 1, tp.x })].flow;
-		//sumflow += vPGrid[flatten<X>({tp.x, tp.z})].flow;
-		//sumflow -= vPGrid[flatten<X>({tp.x, tp.z + 1})].flow;
+		//sumflow -= hPGrid[flatten<X+1>({ tp.y + 1, tp.x })].flow;
+		//sumflow += vPGrid[flatten<Z+1>({tp.y, tp.x})].flow;
+		//sumflow -= vPGrid[flatten<Z+1>({tp.y, tp.x + 1})].flow;
+		sumflow += hPGrid[flatten<X + 1>({ tp.y, tp.x })].flow;
+		sumflow -= hPGrid[flatten<X + 1>({ tp.y + 1, tp.x })].flow;
+		sumflow += vPGrid[flatten<Z + 1>({ tp.x, tp.y })].flow;
+		sumflow -= vPGrid[flatten<Z + 1>({ tp.x + 1, tp.y })].flow;
 
 		float dt = .125;
 		tempGrid[i].depth	= depth + sumflow * -dt;
@@ -112,6 +116,39 @@ __global__ static void updateHPipes(WaterCell* grid,  Pipe* hPGrid, Pipe* thPGri
 
 
 template<int X, int Y, int Z>
+__global__ static void updateVPipes(WaterCell* grid, Pipe* vPGrid, Pipe* tvPGrid)
+{
+	int index = blockIdx.x * blockDim.x + threadIdx.x;
+	int stride = blockDim.x * gridDim.x;
+	int n = (X) * (Z+1);
+
+	for (int i = index; i < n; i += stride)
+	{
+		float flow = vPGrid[i].flow;
+
+		glm::ivec2 pipePos = expand<Z + 1>(i);
+		//swap(pipePos.x, pipePos.y); // confusion
+
+		if (pipePos.y == 0 || pipePos.y == Z)
+		{
+			tvPGrid[i].flow = 0;
+			continue;
+		}
+
+		float downheight = grid[flatten<Z>(pipePos - glm::ivec2(0, 1))].depth;
+		float upheight = grid[flatten<Z>(pipePos)].depth;
+		float A = 1;
+		float g = 9.8;
+		float dt = .125;
+		float dx = 1;
+		float dh = upheight - downheight;
+
+		tvPGrid[i].flow = A * (g / dx) * dh * dt;
+	}
+}
+
+
+template<int X, int Y, int Z>
 static void updateHPipesCPU(WaterCell* grid, Pipe* hPGrid, Pipe* thPGrid)
 {
 	int n = (X + 1) * (Z);
@@ -160,6 +197,36 @@ static void updateHPipesCPU(WaterCell* grid, Pipe* hPGrid, Pipe* thPGrid)
 }
 
 
+template<int X, int Y, int Z>
+static void updateVPipesCPU(WaterCell* grid, Pipe* vPGrid, Pipe* tvPGrid)
+{
+	int n = (X) * (Z + 1);
+
+	for (int i = 0; i < n; i++)
+	{
+		float flow = vPGrid[i].flow;
+
+		glm::ivec2 pipePos = expand<Z + 1>(i);
+		//std::swap(pipePos.x, pipePos.y); // confusion
+
+		if (pipePos.y == 0 || pipePos.y == Z)
+		{
+			tvPGrid[i].flow = 0;
+			continue;
+		}
+
+		float downheight = grid[flatten<Z>(pipePos - glm::ivec2(0, 1))].depth;
+		float upheight = grid[flatten<Z>(pipePos)].depth;
+		float A = 1;
+		float g = 9.8;
+		float dt = .125;
+		float dx = 1;
+		float dh = upheight - downheight;
+
+		tvPGrid[i].flow = A * (g / dx) * dh * dt;
+	}
+}
+
 // THIS FUNCTION IS CORRECT FOR 2D
 template<int X, int Y, int Z>
 static void updateGridWaterCPU(WaterCell* grid, WaterCell* tempGrid, Pipe* hPGrid, Pipe* vPGrid)
@@ -176,6 +243,8 @@ static void updateGridWaterCPU(WaterCell* grid, WaterCell* tempGrid, Pipe* hPGri
 
 		sumflow += hPGrid[flatten<X + 1>({ tp.y, tp.x })].flow;
 		sumflow -= hPGrid[flatten<X + 1>({ tp.y + 1, tp.x })].flow;
+		sumflow += vPGrid[flatten<Z + 1>({ tp.x, tp.y })].flow;
+		sumflow -= vPGrid[flatten<Z + 1>({ tp.x + 1, tp.y })].flow;
 
 		float dt = .125;
 		tempGrid[i].depth = depth + sumflow * -dt;
@@ -186,10 +255,13 @@ static void updateGridWaterCPU(WaterCell* grid, WaterCell* tempGrid, Pipe* hPGri
 template<int X, int Y, int Z>
 PipeWater<X, Y, Z>::PipeWater()
 {
-	cudaMallocManaged(&hPGrid,  (X+1) * (Z) * sizeof(Pipe));
-	cudaMallocManaged(&thPGrid, (X+1) * (Z) * sizeof(Pipe));
-	cudaMallocManaged(&vPGrid,  (X) * (Z+1) * sizeof(Pipe));
-	cudaMallocManaged(&tvPGrid, (X) * (Z+1) * sizeof(Pipe));
+	auto e1 = cudaMallocManaged(&hPGrid, (X + 1) * (Z) * sizeof(Pipe));
+	auto e2 = cudaMallocManaged(&thPGrid, (X + 1) * (Z) * sizeof(Pipe));
+	auto e3 = cudaMallocManaged(&vPGrid, (X) * (Z + 1) * sizeof(Pipe));
+	auto e4 = cudaMallocManaged(&tvPGrid, (X) * (Z + 1) * sizeof(Pipe));
+	//std::cout << e1 << '\n' << e2 << '\n' << e3 << '\n' << e4 << '\n';
+	//vPGrid  = new Pipe[((X) * (Z + 1))];
+	//tvPGrid = new Pipe[((X) * (Z + 1))];
 }
 
 
@@ -226,9 +298,11 @@ void PipeWater<X, Y, Z>::Update()
 {
 	updateHPipes<X, Y, Z><<<hPNumBlocks, PBlockSize>>>(this->Grid, hPGrid, thPGrid);
 	//updateHPipesCPU<X, Y, Z>(this->Grid, hPGrid, thPGrid);
-	//updateVPipes<X, Y, Z><<<vPNumBlocks, PBlockSize>>>(this->Grid, vPGrid, tvPGrid);
+	updateVPipes<X, Y, Z><<<vPNumBlocks, PBlockSize>>>(this->Grid, vPGrid, tvPGrid);
+	//updateVPipesCPU<X, Y, Z>(this->Grid, vPGrid, tvPGrid);
 	cudaDeviceSynchronize();
 	std::swap(hPGrid, thPGrid);
+	std::swap(vPGrid, tvPGrid);
 	updateGridWater<X, Y, Z><<<numBlocks, blockSize>>>(this->Grid, this->TGrid, hPGrid, vPGrid);
 	//updateGridWaterCPU<X, Y, Z>(this->Grid, this->TGrid, hPGrid, vPGrid);
 	cudaDeviceSynchronize();

@@ -36,10 +36,10 @@ public:
 	//CaveGen<200, 200, 1> Caver;
 	//CaveGen<50, 50, 50> Caver2;
 	//CaveGen<200, 50, 200> Caver3;
-	CaveGen<100, 100, 100> Caver4;
+	//CaveGen<100, 100, 100> Caver4;
 	//PipeWater<200, 1, 200> Water;
-	PipeWater<1, 1, 10> Water2;
-	PipeWater<10, 1, 1> Water3;
+	//PipeWater<1, 1, 10> Water2;
+	//PipeWater<10, 1, 1> Water3;
 	PipeWater<10, 1, 10> Water4;
 	CAInterface* automaton = reinterpret_cast<CAInterface*>(&Water4);
 
