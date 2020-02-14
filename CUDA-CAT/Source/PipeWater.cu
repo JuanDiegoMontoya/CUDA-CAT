@@ -74,7 +74,7 @@ __global__ static void updateHPipes(WaterCell* grid,  Pipe* hPGrid, Pipe* thPGri
 		// PIPE GRID ACCESS (X + 1) (pipe->vec2)
 		glm::ivec2 pipePos = expand<X+1>(i);
 
-		if (pipePos.x = 0 || pipePos.x == X)
+		if (pipePos.x == 0 || pipePos.x == X)
 		{
 			thPGrid[i].flow = 0;
 			continue;
@@ -105,6 +105,78 @@ __global__ static void updateHPipes(WaterCell* grid,  Pipe* hPGrid, Pipe* thPGri
 
 		// flow from left to right
 		thPGrid[i].flow = A * (g / dx) * dh * dt;
+	}
+}
+
+
+template<int X, int Y, int Z>
+static void updateHPipesCPU(WaterCell* grid, Pipe* hPGrid, Pipe* thPGrid)
+{
+	int n = (X + 1) * (Z);
+
+	for (int i = 0; i < n; i++)
+	{
+		float flow = hPGrid[i].flow;
+
+		// PIPE GRID ACCESS (X + 1) (pipe->vec2)
+		glm::ivec2 pipePos = expand<X+1>(i);
+		std::swap(pipePos.x, pipePos.y); // confusion
+
+		//ASSERT(pipePos.x < 10);
+		if (pipePos.x == 0 || pipePos.x == X)
+		{
+			thPGrid[i].flow = 0;
+			continue;
+		}
+
+		/*
+		0   1   2  <-- PIPE INDEX
+		| 0 | 1 |  <-- CELL INDEX
+		This is why we need to do pipePos - { 1, 0 } to get the left cell,
+		but not for the right cell.
+		*/
+		// (vec2->normal!) USE NORMAL GRID INDEX
+		float leftHeight = grid[flatten<X>(pipePos - glm::ivec2(1, 0))].depth;
+		float rightHeight = grid[flatten<X>(pipePos)].depth;
+
+		// A = cross section
+		// A = d (w/ line above) * dx       # OPTIONAL
+		// d (w/ line above) = upwind depth # OPTIONAL
+		// dh = surface height difference
+		// dh_(x+.5,y) = h_(x+1,y) - h_(x,y)
+		// dt = optional scalar
+		// Q += A*(g/dx)*dh*dt
+		float A = 1;
+		float g = 9.8;
+		float dt = .125;
+		float dx = 1; // CONSTANT (length of pipe)
+		float dh = rightHeight - leftHeight; // diff left->right
+
+		// flow from left to right
+		thPGrid[i].flow = A * (g / dx) * dh * dt;
+	}
+}
+
+
+// THIS FUNCTION IS CORRECT FOR 2D
+template<int X, int Y, int Z>
+static void updateGridWaterCPU(WaterCell* grid, WaterCell* tempGrid, Pipe* hPGrid, Pipe* vPGrid)
+{
+	int n = X * Y * Z;
+
+	for (int i = 0; i < n; i ++)
+	{
+		float depth = grid[i].depth;
+
+		// almost certainly NORMAL grid index
+		glm::ivec2 tp = expand<X>(i);
+		float sumflow = 0;
+
+		sumflow += hPGrid[flatten<X + 1>({ tp.y, tp.x })].flow;
+		sumflow -= hPGrid[flatten<X + 1>({ tp.y + 1, tp.x })].flow;
+
+		float dt = .125;
+		tempGrid[i].depth = depth + sumflow * -dt;
 	}
 }
 
@@ -150,11 +222,13 @@ void PipeWater<X, Y, Z>::Init()
 template<int X, int Y, int Z>
 void PipeWater<X, Y, Z>::Update()
 {
-	updateHPipes<X, Y, Z><<<hPNumBlocks, PBlockSize>>>(this->Grid, hPGrid, thPGrid);
+	//updateHPipes<X, Y, Z><<<hPNumBlocks, PBlockSize>>>(this->Grid, hPGrid, thPGrid);
+	updateHPipesCPU<X, Y, Z>(this->Grid, hPGrid, thPGrid);
 	//updateVPipes<X, Y, Z><<<vPNumBlocks, PBlockSize>>>(this->Grid, vPGrid, tvPGrid);
 	cudaDeviceSynchronize();
 	std::swap(hPGrid, thPGrid);
-	updateGridWater<X, Y, Z><<<numBlocks, blockSize>>>(this->Grid, this->TGrid, hPGrid, vPGrid);
+	//updateGridWater<X, Y, Z><<<numBlocks, blockSize>>>(this->Grid, this->TGrid, hPGrid, vPGrid);
+	updateGridWaterCPU<X, Y, Z>(this->Grid, this->TGrid, hPGrid, vPGrid);
 	cudaDeviceSynchronize();
 
 	// TGrid contains updated grid values after update

@@ -2,7 +2,7 @@
 #include "device_launch_parameters.h"
 
 template<int X, int Y>
-__device__ glm::ivec3 expand(unsigned index)
+__device__ __host__ glm::ivec3 expand(unsigned index)
 {
 	int k = index / (X * Y);
 	int j = (index % (X * Y)) / X;
@@ -11,25 +11,25 @@ __device__ glm::ivec3 expand(unsigned index)
 }
 
 template<int X>
-__device__ glm::ivec2 expand(unsigned index)
+__device__ __host__ glm::ivec2 expand(unsigned index)
 {
 	return { index / X, index % X };
 }
 
 template<int X, int Y>
-__device__ int flatten(glm::ivec3 coord)
+__device__ __host__ int flatten(glm::ivec3 coord)
 {
 	return coord.x + coord.y * X + coord.z * X * Y;
 }
 
 template<int X>
-__device__ int flatten(glm::ivec2 coord)
+__device__ __host__ int flatten(glm::ivec2 coord)
 {
 	return coord.x + coord.y * X;
 }
 
 template<int X, int Y, int Z>
-__device__ bool inBoundary(glm::ivec3 p)
+__device__ __host__ bool inBoundary(glm::ivec3 p)
 {
 	return
 		p.x >= 0 && p.x < X &&
