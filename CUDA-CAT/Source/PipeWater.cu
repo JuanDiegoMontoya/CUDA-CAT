@@ -32,7 +32,9 @@ __global__ static void updateGridWater(WaterCell* grid, WaterCell* tempGrid, Pip
 	for (int i = index; i < n; i += stride)
 	{
 		float depth = grid[i].depth;
-		glm::ivec3 tp = expand<X, Y>(i);
+
+		// almost certainly using pipe grid index (pipe->vec2)
+		glm::ivec2 tp = expand<X+1>(i);
 
 		// d += -dt*(SUM(Q)/(dx)^2)
 		// add to depth flow of adjacent pipes
@@ -41,10 +43,14 @@ __global__ static void updateGridWater(WaterCell* grid, WaterCell* tempGrid, Pip
 		//depth += vPGrid[tp.x][tp.z].flow;
 		//depth -= vPGrid[tp.x][tp.z + 1].flow;
 		float sumflow = 0;
-		//sumflow += hPGrid[flatten<Z+1>({tp.z, tp.x})].flow;
-		//sumflow -= hPGrid[flatten<Z+1>({tp.z, tp.x + 1})].flow;
-		sumflow += hPGrid[flatten<X>({ tp.x, tp.z })].flow;
-		sumflow -= hPGrid[flatten<X>({ tp.x + 1, tp.z })].flow;
+
+		// LEFT TO RIGHT FLOW
+		// tp.y is Z POSITION (vec2 constraint)
+		// add flow from left INTO this cell
+		// (vec2->pipe)
+		sumflow += hPGrid[flatten<X+1>({ tp.x, tp.y })].flow;
+		// subtract flow TO right cell
+		sumflow -= hPGrid[flatten<X+1>({ tp.x + 1, tp.y })].flow;
 		//sumflow += vPGrid[flatten<X>({tp.x, tp.z})].flow;
 		//sumflow -= vPGrid[flatten<X>({tp.x, tp.z + 1})].flow;
 
@@ -64,6 +70,8 @@ __global__ static void updateHPipes(WaterCell* grid,  Pipe* hPGrid, Pipe* thPGri
 	for (int i = index; i < n; i += stride)
 	{
 		float flow = hPGrid[i].flow;
+
+		// PIPE GRID ACCESS (X + 1) (pipe->vec2)
 		glm::ivec2 pipePos = expand<X+1>(i);
 
 		if (pipePos.x = 0 || pipePos.x == X)
@@ -78,6 +86,7 @@ __global__ static void updateHPipes(WaterCell* grid,  Pipe* hPGrid, Pipe* thPGri
 		This is why we need to do pipePos - { 1, 0 } to get the left cell,
 		but not for the right cell.
 		*/
+		// (vec2->normal!) USE NORMAL GRID INDEX
 		float leftHeight = grid[flatten<X>(pipePos - glm::ivec2(1, 0))].depth;
 		float rightHeight = grid[flatten<X>(pipePos)].depth;
 

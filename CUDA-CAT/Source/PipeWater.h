@@ -32,4 +32,6 @@ private:
 	Pipe* thPGrid = nullptr; // temp
 	Pipe* vPGrid = nullptr; // vertical (z axis)
 	Pipe* tvPGrid = nullptr; // temp
+
+	Mesh* pMesh_ = nullptr;
 };
