@@ -42,3 +42,11 @@ inline bool inBound(int a, int b)
 {
 	return a >= 0 && a < b;
 }
+
+template<typename T>
+__device__ void swap(T& a, T& b)
+{
+	T tmp = a;
+	a = b;
+	b = tmp;
+}

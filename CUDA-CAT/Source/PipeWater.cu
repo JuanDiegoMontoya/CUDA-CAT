@@ -13,6 +13,7 @@
 template class PipeWater<200, 1, 200>;
 template class PipeWater<1, 1, 10>;
 template class PipeWater<10, 1, 1>;
+template class PipeWater<10, 1, 10>;
 
 // ######################################################
 // ######################################################
@@ -34,7 +35,7 @@ __global__ static void updateGridWater(WaterCell* grid, WaterCell* tempGrid, Pip
 		float depth = grid[i].depth;
 
 		// almost certainly using pipe grid index (pipe->vec2)
-		glm::ivec2 tp = expand<X+1>(i);
+		glm::ivec2 tp = expand<X>(i);
 
 		// d += -dt*(SUM(Q)/(dx)^2)
 		// add to depth flow of adjacent pipes
@@ -48,9 +49,9 @@ __global__ static void updateGridWater(WaterCell* grid, WaterCell* tempGrid, Pip
 		// tp.y is Z POSITION (vec2 constraint)
 		// add flow from left INTO this cell
 		// (vec2->pipe)
-		sumflow += hPGrid[flatten<X+1>({ tp.x, tp.y })].flow;
+		sumflow += hPGrid[flatten<X+1>({ tp.y, tp.x })].flow;
 		// subtract flow TO right cell
-		sumflow -= hPGrid[flatten<X+1>({ tp.x + 1, tp.y })].flow;
+		sumflow -= hPGrid[flatten<X+1>({ tp.y + 1, tp.x })].flow;
 		//sumflow += vPGrid[flatten<X>({tp.x, tp.z})].flow;
 		//sumflow -= vPGrid[flatten<X>({tp.x, tp.z + 1})].flow;
 
@@ -73,6 +74,7 @@ __global__ static void updateHPipes(WaterCell* grid,  Pipe* hPGrid, Pipe* thPGri
 
 		// PIPE GRID ACCESS (X + 1) (pipe->vec2)
 		glm::ivec2 pipePos = expand<X+1>(i);
+		swap(pipePos.x, pipePos.y); // confusion
 
 		if (pipePos.x == 0 || pipePos.x == X)
 		{
@@ -222,13 +224,13 @@ void PipeWater<X, Y, Z>::Init()
 template<int X, int Y, int Z>
 void PipeWater<X, Y, Z>::Update()
 {
-	//updateHPipes<X, Y, Z><<<hPNumBlocks, PBlockSize>>>(this->Grid, hPGrid, thPGrid);
-	updateHPipesCPU<X, Y, Z>(this->Grid, hPGrid, thPGrid);
+	updateHPipes<X, Y, Z><<<hPNumBlocks, PBlockSize>>>(this->Grid, hPGrid, thPGrid);
+	//updateHPipesCPU<X, Y, Z>(this->Grid, hPGrid, thPGrid);
 	//updateVPipes<X, Y, Z><<<vPNumBlocks, PBlockSize>>>(this->Grid, vPGrid, tvPGrid);
 	cudaDeviceSynchronize();
 	std::swap(hPGrid, thPGrid);
-	//updateGridWater<X, Y, Z><<<numBlocks, blockSize>>>(this->Grid, this->TGrid, hPGrid, vPGrid);
-	updateGridWaterCPU<X, Y, Z>(this->Grid, this->TGrid, hPGrid, vPGrid);
+	updateGridWater<X, Y, Z><<<numBlocks, blockSize>>>(this->Grid, this->TGrid, hPGrid, vPGrid);
+	//updateGridWaterCPU<X, Y, Z>(this->Grid, this->TGrid, hPGrid, vPGrid);
 	cudaDeviceSynchronize();
 
 	// TGrid contains updated grid values after update
