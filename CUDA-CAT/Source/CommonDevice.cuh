@@ -10,10 +10,22 @@ __device__ glm::ivec3 expand(unsigned index)
 	return { i, j, k };
 }
 
+template<int X>
+__device__ glm::ivec2 expand(unsigned index)
+{
+	return { index / X, index % X };
+}
+
 template<int X, int Y>
 __device__ int flatten(glm::ivec3 coord)
 {
 	return coord.x + coord.y * X + coord.z * X * Y;
+}
+
+template<int X>
+__device__ int flatten(glm::ivec2 coord)
+{
+	return coord.x + coord.y * X;
 }
 
 template<int X, int Y, int Z>

@@ -61,9 +61,6 @@ Mesh* GenVoxelMesh(CellType* Grid, int X, int Y, int Z, SkipCheck skip, HeightCh
 			{
 				int index = x + yzpart;
 
-				// skip empty cells
-				//if (Grid[index].Alive == 0)
-				//	continue;
 				if (skip(Grid[index]))
 					continue;
 

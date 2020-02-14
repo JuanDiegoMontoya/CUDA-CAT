@@ -31,13 +31,16 @@ public:
 	bool pauseSimulation = true;
 	float updateFrequency = .1f; // seconds
 	float timeCount = 0;
-	GameOfLife<50, 50, 50> GoL;
-	GameOfLife<200, 200, 1> GoL2;
-	CaveGen<200, 200, 1> Caver;
-	CaveGen<50, 50, 50> Caver2;
-	CaveGen<200, 50, 200> Caver3;
-	PipeWater<200, 1, 200> Water;
-	CAInterface* automaton = reinterpret_cast<CAInterface*>(&Water);
+	//GameOfLife<50, 50, 50> GoL;
+	//GameOfLife<200, 200, 1> GoL2;
+	//CaveGen<200, 200, 1> Caver;
+	//CaveGen<50, 50, 50> Caver2;
+	//CaveGen<200, 50, 200> Caver3;
+	CaveGen<100, 100, 100> Caver4;
+	//PipeWater<200, 1, 200> Water;
+	PipeWater<1, 1, 10> Water2;
+	PipeWater<10, 1, 1> Water3;
+	CAInterface* automaton = reinterpret_cast<CAInterface*>(&Water3);
 
 private:
 	void drawQuad();

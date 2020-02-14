@@ -20,5 +20,4 @@ public:
 	int M = 2;      // moore neighborhood size
 private:
 	virtual void genMesh() override;
-
 };

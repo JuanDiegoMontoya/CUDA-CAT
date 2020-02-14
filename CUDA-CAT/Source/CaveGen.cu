@@ -14,6 +14,7 @@ template class CaveGen<50, 50, 1>;
 template class CaveGen<200, 200, 1>;
 template class CaveGen<50, 50, 50>;
 template class CaveGen<200, 50, 200>;
+template class CaveGen<100, 100, 100>;
 
 template<int X, int Y, int Z>
 __global__ static void updateGridCave(CaveCell* grid, CaveCell* tempGrid, int T, int M)
@@ -67,10 +68,10 @@ void CaveGen<X, Y, Z>::Init()
 	// populate the grid with water and walls
 	for (int z = 0; z < Z; z++)
 	{
-		int zPart = z * Y * Z;
+		int zPart = z * Y * X;
 		for (int y = 0; y < Y; y++)
 		{
-			int yzPart = y * Y + zPart;
+			int yzPart = y * X + zPart;
 			for (int x = 0; x < X; x++)
 			{
 				// compute final part of flattened index

@@ -11,6 +11,8 @@
 #include "CommonDevice.cuh"
 
 template class PipeWater<200, 1, 200>;
+template class PipeWater<1, 1, 10>;
+template class PipeWater<10, 1, 1>;
 
 // ######################################################
 // ######################################################
@@ -21,7 +23,7 @@ template class PipeWater<200, 1, 200>;
 // ######################################################
 
 template<int X, int Y, int Z>
-__global__ static void updateGridWater(WaterCell* grid, WaterCell* tempGrid, int T, int M)
+__global__ static void updateGridWater(WaterCell* grid, WaterCell* tempGrid, Pipe* hPGrid, Pipe* vPGrid)
 {
 	int index = blockIdx.x * blockDim.x + threadIdx.x;
 	int stride = blockDim.x * gridDim.x;
@@ -29,39 +31,82 @@ __global__ static void updateGridWater(WaterCell* grid, WaterCell* tempGrid, int
 
 	for (int i = index; i < n; i += stride)
 	{
-		//bool thisRock = grid[i].Rock;
-		bool nextState;
-		glm::ivec3 thisPos = expand<X, Y>(i);
-		//int env = thisRock ? -1 : 0; // un-count self if alive
+		float depth = grid[i].depth;
+		glm::ivec3 tp = expand<X, Y>(i);
 
-		// iterate each of 26 neighbors, checking their living status if they exist
-		for (int z = -M; z <= M; z++)
+		// d += -dt*(SUM(Q)/(dx)^2)
+		// add to depth flow of adjacent pipes
+		//depth += hPGrid[tp.z][tp.x].flow;
+		//depth -= hPGrid[tp.z][tp.x + 1].flow;
+		//depth += vPGrid[tp.x][tp.z].flow;
+		//depth -= vPGrid[tp.x][tp.z + 1].flow;
+		float sumflow = 0;
+		//sumflow += hPGrid[flatten<Z+1>({tp.z, tp.x})].flow;
+		//sumflow -= hPGrid[flatten<Z+1>({tp.z, tp.x + 1})].flow;
+		sumflow += hPGrid[flatten<X>({ tp.x, tp.z })].flow;
+		sumflow -= hPGrid[flatten<X>({ tp.x + 1, tp.z })].flow;
+		//sumflow += vPGrid[flatten<X>({tp.x, tp.z})].flow;
+		//sumflow -= vPGrid[flatten<X>({tp.x, tp.z + 1})].flow;
+
+		float dt = .125;
+		tempGrid[i].depth	= depth + sumflow * -dt;
+	}
+}
+
+
+template<int X, int Y, int Z>
+__global__ static void updateHPipes(WaterCell* grid,  Pipe* hPGrid, Pipe* thPGrid)
+{
+	int index = blockIdx.x * blockDim.x + threadIdx.x;
+	int stride = blockDim.x * gridDim.x;
+	int n = (X+1) * (Z);
+
+	for (int i = index; i < n; i += stride)
+	{
+		float flow = hPGrid[i].flow;
+		glm::ivec2 pipePos = expand<X+1>(i);
+
+		if (pipePos.x = 0 || pipePos.x == X)
 		{
-			//if (!inBound(z, GRID_SIZE_Z)) continue;
-			//int zPart = z * GRID_SIZE_Y * GRID_SIZE_Z;
-			for (int y = -M; y <= M; y++)
-			{
-				//if (!inBound(y, GRID_SIZE_Y)) continue;
-				//int yzPart = y * GRID_SIZE_Y + zPart;
-				for (int x = -M; x <= M; x++)
-				{
-					//if (!inBound(x, GRID_SIZE_X)) continue;
-					//int fIndex = x + yzPart;
-					glm::ivec3 nPos = thisPos + glm::ivec3(x, y, z);
-					if (!inBoundary<X, Y, Z>(nPos)) continue;
-					int fIndex = flatten<X, Y>(nPos);
-					
-				}
-			}
+			thPGrid[i].flow = 0;
+			continue;
 		}
 
-		//if (env >= T)
-		//	nextState = true;
-		//else
-		//	nextState = false;
+		/*
+		0   1   2  <-- PIPE INDEX
+		| 0 | 1 |  <-- CELL INDEX
+		This is why we need to do pipePos - { 1, 0 } to get the left cell,
+		but not for the right cell.
+		*/
+		float leftHeight = grid[flatten<X>(pipePos - glm::ivec2(1, 0))].depth;
+		float rightHeight = grid[flatten<X>(pipePos)].depth;
 
-		//tempGrid[i].Rock = nextState;
+		// A = cross section
+		// A = d (w/ line above) * dx       # OPTIONAL
+		// d (w/ line above) = upwind depth # OPTIONAL
+		// dh = surface height difference
+		// dh_(x+.5,y) = h_(x+1,y) - h_(x,y)
+		// dt = optional scalar
+		// Q += A*(g/dx)*dh*dt
+		float A = 1;
+		float g = 9.8;
+		float dt = .125;
+		float dx = 1; // CONSTANT (length of pipe)
+		float dh = rightHeight - leftHeight; // diff left->right
+
+		// flow from left to right
+		thPGrid[i].flow = A * (g / dx) * dh * dt;
 	}
+}
+
+
+template<int X, int Y, int Z>
+PipeWater<X, Y, Z>::PipeWater()
+{
+	cudaMallocManaged(&hPGrid,  (X+1) * (Z) * sizeof(Pipe));
+	cudaMallocManaged(&thPGrid, (X+1) * (Z) * sizeof(Pipe));
+	cudaMallocManaged(&vPGrid,  (X) * (Z+1) * sizeof(Pipe));
+	cudaMallocManaged(&tvPGrid, (X) * (Z+1) * sizeof(Pipe));
 }
 
 
@@ -71,16 +116,16 @@ void PipeWater<X, Y, Z>::Init()
 	// populate the grid with water and walls
 	for (int z = 0; z < Z; z++)
 	{
-		int zPart = z * Y * Z;
+		int zpart = z * X * Y;
 		for (int y = 0; y < Y; y++)
 		{
-			int yzPart = y * Y + zPart;
+			int yzpart = zpart + y * X;
 			for (int x = 0; x < X; x++)
 			{
 				// compute final part of flattened index
-				int index = x + yzPart;
+				int index = x + yzpart;
 
-				this->Grid[index].depth = Utils::get_random(0, 1);
+				this->Grid[index].depth = Utils::get_random(0, 10);
 			}
 		}
 	}
@@ -96,7 +141,11 @@ void PipeWater<X, Y, Z>::Init()
 template<int X, int Y, int Z>
 void PipeWater<X, Y, Z>::Update()
 {
-	updateGridWater<X, Y, Z><<<numBlocks, blockSize>>>(this->Grid, this->TGrid, 1, 1);
+	updateHPipes<X, Y, Z><<<hPNumBlocks, PBlockSize>>>(this->Grid, hPGrid, thPGrid);
+	//updateVPipes<X, Y, Z><<<vPNumBlocks, PBlockSize>>>(this->Grid, vPGrid, tvPGrid);
+	cudaDeviceSynchronize();
+	std::swap(hPGrid, thPGrid);
+	updateGridWater<X, Y, Z><<<numBlocks, blockSize>>>(this->Grid, this->TGrid, hPGrid, vPGrid);
 	cudaDeviceSynchronize();
 
 	// TGrid contains updated grid values after update
@@ -117,7 +166,7 @@ void PipeWater<X, Y, Z>::Render()
 	sr->Use();
 	sr->setMat4("u_proj", Render::GetCamera()->GetProj());
 	sr->setMat4("u_view", Render::GetCamera()->GetView());
-	sr->setMat4("u_model", glm::mat4(1));
+	sr->setMat4("u_model", glm::translate(glm::mat4(1), glm::vec3(150, 40, 80)));
 	sr->setVec3("u_color", { .2, .7, .9 });
 	sr->setVec3("u_viewpos", Render::GetCamera()->GetPos());
 
@@ -126,6 +175,7 @@ void PipeWater<X, Y, Z>::Render()
 	{
 		// DANGEROUS IF AUTOMATON IS NOT A CAVEGEN
 		ImGui::Begin("Piped Water Simulation");
+		ImGui::Text("There is nothing here, but there will be!");
 		ImGui::End();
 	}
 }

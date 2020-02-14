@@ -24,8 +24,8 @@ public:
 	//CellularAutomata(int X, int Y, int Z) : numBlocks((X* Y* Z + blockSize - 1) / blockSize) {}
 	CellularAutomata()
 	{
-		cudaMallocManaged(&this->Grid, X * Y * Z * sizeof(GoLCell));
-		cudaMallocManaged(&this->TGrid, X * Y * Z * sizeof(GoLCell));
+		cudaMallocManaged(&this->Grid, X * Y * Z * sizeof(C));
+		cudaMallocManaged(&this->TGrid, X * Y * Z * sizeof(C));
 	}
 	~CellularAutomata()
 	{
