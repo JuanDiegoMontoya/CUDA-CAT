@@ -256,9 +256,12 @@ void PipeWater<X, Y, Z>::Render()
 	this->mesh_->Draw();
 
 	{
-		// DANGEROUS IF AUTOMATON IS NOT A CAVEGEN
 		ImGui::Begin("Piped Water Simulation");
-		ImGui::Text("There is nothing here, but there will be!");
+		float sum = 0;
+		for (int i = 0; i < X * Y * Z; i++)
+			sum += this->Grid[i].depth;
+		ImGui::Text("Sum of water: %.2f", sum);
+		//ImGui::Text("Avg height: %.2f", sum / (X * Y * Z));
 		ImGui::End();
 	}
 }
