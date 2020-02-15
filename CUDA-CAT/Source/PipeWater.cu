@@ -260,9 +260,8 @@ PipeWater<X, Y, Z>::PipeWater()
 	auto e2 = cudaMallocManaged(&thPGrid, (X + 1) * (Z) * sizeof(Pipe));
 	auto e3 = cudaMallocManaged(&vPGrid, (X) * (Z + 1) * sizeof(Pipe));
 	auto e4 = cudaMallocManaged(&tvPGrid, (X) * (Z + 1) * sizeof(Pipe));
-	//std::cout << e1 << '\n' << e2 << '\n' << e3 << '\n' << e4 << '\n';
-	//vPGrid  = new Pipe[((X) * (Z + 1))];
-	//tvPGrid = new Pipe[((X) * (Z + 1))];
+
+	// also generate base mesh
 }
 
 #define _USE_MATH_DEFINES

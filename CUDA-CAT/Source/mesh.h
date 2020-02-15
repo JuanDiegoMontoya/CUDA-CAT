@@ -32,8 +32,7 @@ public:
 	const std::vector<GLuint>& GetIndices() const { return indices; }
 	const std::vector<Texture>& GetTextures() const { return textures; }
 
-	// unadjusted min, max, and center bounding coords
-	glm::vec3 min, max, mid;
+	VBO* GetVBO() { return vbo; }
 protected:
 	Mesh() = delete;
 
