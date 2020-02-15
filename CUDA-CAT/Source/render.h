@@ -41,6 +41,7 @@ public:
 	//PipeWater<1, 1, 10> Water2;
 	//PipeWater<10, 1, 1> Water3;
 	PipeWater<10, 1, 10> Water4;
+	PipeWater<100, 1, 100> Water5;
 	CAInterface* automaton = reinterpret_cast<CAInterface*>(&Water4);
 
 private:

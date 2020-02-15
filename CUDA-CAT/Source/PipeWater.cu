@@ -14,6 +14,7 @@
 //template class PipeWater<1, 1, 10>;
 //template class PipeWater<10, 1, 1>;
 template class PipeWater<10, 1, 10>;
+template class PipeWater<100, 1, 100>;
 
 // ######################################################
 // ######################################################
@@ -110,7 +111,7 @@ __global__ static void updateHPipes(WaterCell* grid,  Pipe* hPGrid, Pipe* thPGri
 		float dh = rightHeight - leftHeight; // diff left->right
 
 		// flow from left to right
-		thPGrid[i].flow = A * (g / dx) * dh * dt;
+		thPGrid[i].flow = flow + (A * (g / dx) * dh * dt);
 	}
 }
 
@@ -143,7 +144,7 @@ __global__ static void updateVPipes(WaterCell* grid, Pipe* vPGrid, Pipe* tvPGrid
 		float dx = 1;
 		float dh = upheight - downheight;
 
-		tvPGrid[i].flow = A * (g / dx) * dh * dt;
+		tvPGrid[i].flow = flow + (A * (g / dx) * dh * dt);
 	}
 }
 
@@ -264,7 +265,8 @@ PipeWater<X, Y, Z>::PipeWater()
 	//tvPGrid = new Pipe[((X) * (Z + 1))];
 }
 
-
+#define _USE_MATH_DEFINES
+#include <math.h>
 template<int X, int Y, int Z>
 void PipeWater<X, Y, Z>::Init()
 {
@@ -280,7 +282,10 @@ void PipeWater<X, Y, Z>::Init()
 				// compute final part of flattened index
 				int index = x + yzpart;
 
-				this->Grid[index].depth = Utils::get_random(0, 10);
+				//this->Grid[index].depth = Utils::get_random(7, 10);
+				//this->Grid[index].depth = glm::distance(glm::vec2(x, z), glm::vec2(0, 0)) / 1.5f;
+				//this->Grid[index].depth = sinf(z * M_PI / 5) + cosf(x * M_PI / 5) + 2;
+				this->Grid[index].depth = cosf(z * M_PI / 5) + cosf(x * M_PI / 5) + 2;
 			}
 		}
 	}
@@ -333,10 +338,10 @@ void PipeWater<X, Y, Z>::Render()
 
 	{
 		ImGui::Begin("Piped Water Simulation");
-		float sum = 0;
-		for (int i = 0; i < X * Y * Z; i++)
-			sum += this->Grid[i].depth;
-		ImGui::Text("Sum of water: %.2f", sum);
+		//float sum = 0;
+		//for (int i = 0; i < X * Y * Z; i++)
+		//	sum += this->Grid[i].depth;
+		//ImGui::Text("Sum of water: %.2f", sum);
 		//ImGui::Text("Avg height: %.2f", sum / (X * Y * Z));
 		ImGui::End();
 	}

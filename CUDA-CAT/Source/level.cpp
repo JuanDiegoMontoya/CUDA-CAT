@@ -107,6 +107,9 @@ void Level::DrawImGui()
 		if (ImGui::Button("200x Update Simulation"))
 			for (int i = 0; i < 200; i++)
 				renderer_.automaton->Update();
+		if (ImGui::Button("2000x Update Simulation"))
+			for (int i = 0; i < 2000; i++)
+				renderer_.automaton->Update();
 		ImGui::End();
 	}
 
