@@ -7,3 +7,5 @@ All CA in this project have customizable parameters and size in three dimensions
 - Conway's Game of Life (using rules from https://wpmedia.wolfram.com/uploads/sites/13/2018/02/01-3-1.pdf)
 - Cave generator based on http://julian.togelius.com/Johnson2010Cellular.pdf
 - Fluid simulation as described in section 4.5 of https://tutcris.tut.fi/portal/files/4312220/kellomaki_1354.pdf
+<br/><br/><br/><br/><br/><br/><br/>
+<sup><sup>Yes, CAT stands for Cellular Automata Thingy</sup></sup>
