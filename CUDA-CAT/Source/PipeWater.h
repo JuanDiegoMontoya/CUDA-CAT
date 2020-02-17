@@ -25,6 +25,11 @@ public:
 private:
 	virtual void genMesh() override;
 
+	// alternative to generating a mesh from scratch every update,
+	// just update what is already there with much less CPU overhead
+	void initPlanarMesh();
+	void updatePlanarMesh();
+
 	const int PBlockSize = 128;
 	const int hPNumBlocks = ((X+1) * Z + PBlockSize - 1) / PBlockSize;
 	const int vPNumBlocks = (X * (Z+1) + PBlockSize - 1) / PBlockSize;

@@ -16,13 +16,12 @@
 template class PipeWater<10, 1, 10>;
 template class PipeWater<100, 1, 100>;
 
-// ######################################################
-// ######################################################
-// ######################################################
-//               TODO: THIS WHOLE FILE
-// ######################################################
-// ######################################################
-// ######################################################
+
+/*################################################################
+##################################################################
+										      KERNEL CODE
+##################################################################
+################################################################*/
 
 template<int X, int Y, int Z>
 __global__ static void updateGridWater(WaterCell* grid, WaterCell* tempGrid, Pipe* hPGrid, Pipe* vPGrid)
@@ -149,108 +148,11 @@ __global__ static void updateVPipes(WaterCell* grid, Pipe* vPGrid, Pipe* tvPGrid
 }
 
 
-template<int X, int Y, int Z>
-static void updateHPipesCPU(WaterCell* grid, Pipe* hPGrid, Pipe* thPGrid)
-{
-	int n = (X + 1) * (Z);
-
-	for (int i = 0; i < n; i++)
-	{
-		float flow = hPGrid[i].flow;
-
-		// PIPE GRID ACCESS (X + 1) (pipe->vec2)
-		glm::ivec2 pipePos = expand<X+1>(i);
-		std::swap(pipePos.x, pipePos.y); // confusion
-
-		//ASSERT(pipePos.x < 10);
-		if (pipePos.x == 0 || pipePos.x == X)
-		{
-			thPGrid[i].flow = 0;
-			continue;
-		}
-
-		/*
-		0   1   2  <-- PIPE INDEX
-		| 0 | 1 |  <-- CELL INDEX
-		This is why we need to do pipePos - { 1, 0 } to get the left cell,
-		but not for the right cell.
-		*/
-		// (vec2->normal!) USE NORMAL GRID INDEX
-		float leftHeight = grid[flatten<X>(pipePos - glm::ivec2(1, 0))].depth;
-		float rightHeight = grid[flatten<X>(pipePos)].depth;
-
-		// A = cross section
-		// A = d (w/ line above) * dx       # OPTIONAL
-		// d (w/ line above) = upwind depth # OPTIONAL
-		// dh = surface height difference
-		// dh_(x+.5,y) = h_(x+1,y) - h_(x,y)
-		// dt = optional scalar
-		// Q += A*(g/dx)*dh*dt
-		float A = 1;
-		float g = 9.8;
-		float dt = .125;
-		float dx = 1; // CONSTANT (length of pipe)
-		float dh = rightHeight - leftHeight; // diff left->right
-
-		// flow from left to right
-		thPGrid[i].flow = A * (g / dx) * dh * dt;
-	}
-}
-
-
-template<int X, int Y, int Z>
-static void updateVPipesCPU(WaterCell* grid, Pipe* vPGrid, Pipe* tvPGrid)
-{
-	int n = (X) * (Z + 1);
-
-	for (int i = 0; i < n; i++)
-	{
-		float flow = vPGrid[i].flow;
-
-		glm::ivec2 pipePos = expand<Z + 1>(i);
-		//std::swap(pipePos.x, pipePos.y); // confusion
-
-		if (pipePos.y == 0 || pipePos.y == Z)
-		{
-			tvPGrid[i].flow = 0;
-			continue;
-		}
-
-		float downheight = grid[flatten<Z>(pipePos - glm::ivec2(0, 1))].depth;
-		float upheight = grid[flatten<Z>(pipePos)].depth;
-		float A = 1;
-		float g = 9.8;
-		float dt = .125;
-		float dx = 1;
-		float dh = upheight - downheight;
-
-		tvPGrid[i].flow = A * (g / dx) * dh * dt;
-	}
-}
-
-// THIS FUNCTION IS CORRECT FOR 2D
-template<int X, int Y, int Z>
-static void updateGridWaterCPU(WaterCell* grid, WaterCell* tempGrid, Pipe* hPGrid, Pipe* vPGrid)
-{
-	int n = X * Y * Z;
-
-	for (int i = 0; i < n; i ++)
-	{
-		float depth = grid[i].depth;
-
-		// almost certainly NORMAL grid index
-		glm::ivec2 tp = expand<X>(i);
-		float sumflow = 0;
-
-		sumflow += hPGrid[flatten<X + 1>({ tp.y, tp.x })].flow;
-		sumflow -= hPGrid[flatten<X + 1>({ tp.y + 1, tp.x })].flow;
-		sumflow += vPGrid[flatten<Z + 1>({ tp.x, tp.y })].flow;
-		sumflow -= vPGrid[flatten<Z + 1>({ tp.x + 1, tp.y })].flow;
-
-		float dt = .125;
-		tempGrid[i].depth = depth + sumflow * -dt;
-	}
-}
+/*################################################################
+##################################################################
+										    END KERNEL CODE
+##################################################################
+################################################################*/
 
 
 template<int X, int Y, int Z>
@@ -261,7 +163,10 @@ PipeWater<X, Y, Z>::PipeWater()
 	auto e3 = cudaMallocManaged(&vPGrid, (X) * (Z + 1) * sizeof(Pipe));
 	auto e4 = cudaMallocManaged(&tvPGrid, (X) * (Z + 1) * sizeof(Pipe));
 
-	// also generate base mesh
+	// will at least tell us something is wrong
+	auto ef = e1 | e2 | e3 | e4;
+	if (ef != cudaSuccess)
+		std::cout << "Error initializing shared memory!\n";
 }
 
 #define _USE_MATH_DEFINES
@@ -269,7 +174,7 @@ PipeWater<X, Y, Z>::PipeWater()
 template<int X, int Y, int Z>
 void PipeWater<X, Y, Z>::Init()
 {
-	// populate the grid with water and walls
+	// populate the grid with water
 	for (int z = 0; z < Z; z++)
 	{
 		int zpart = z * X * Y;
@@ -278,13 +183,12 @@ void PipeWater<X, Y, Z>::Init()
 			int yzpart = zpart + y * X;
 			for (int x = 0; x < X; x++)
 			{
-				// compute final part of flattened index
 				int index = x + yzpart;
 
 				//this->Grid[index].depth = Utils::get_random(7, 10);
-				//this->Grid[index].depth = glm::distance(glm::vec2(x, z), glm::vec2(0, 0)) / 1.5f;
+				this->Grid[index].depth = glm::distance(glm::vec2(x, z), glm::vec2(0, 0)) / 1.5f;
 				//this->Grid[index].depth = sinf(z * M_PI / 5) + cosf(x * M_PI / 5) + 2;
-				this->Grid[index].depth = cosf(z * M_PI / 5) + cosf(x * M_PI / 5) + 2;
+				//this->Grid[index].depth = cosf(z * M_PI / 5) + cosf(x * M_PI / 5) + 2;
 			}
 		}
 	}
@@ -364,3 +268,117 @@ void PipeWater<X, Y, Z>::genMesh()
 	};
 	mesh_ = GenVoxelMesh(this->Grid, X, Y, Z, skip, height);
 }
+
+
+template<int X, int Y, int Z>
+void PipeWater<X, Y, Z>::initPlanarMesh()
+{
+}
+
+
+template<int X, int Y, int Z>
+void PipeWater<X, Y, Z>::updatePlanarMesh()
+{
+}
+
+
+/*################################################################
+##################################################################
+               CPU SIMULATION CODE FOR DEBUGGING
+##################################################################
+################################################################*/
+
+
+template<int X, int Y, int Z>
+static void updateHPipesCPU(WaterCell* grid, Pipe* hPGrid, Pipe* thPGrid)
+{
+	int n = (X + 1) * (Z);
+
+	for (int i = 0; i < n; i++)
+	{
+		float flow = hPGrid[i].flow;
+
+		glm::ivec2 pipePos = expand<X + 1>(i);
+		std::swap(pipePos.x, pipePos.y); // confusion
+
+		//ASSERT(pipePos.x < 10);
+		if (pipePos.x == 0 || pipePos.x == X)
+		{
+			thPGrid[i].flow = 0;
+			continue;
+		}
+
+		float leftHeight = grid[flatten<X>(pipePos - glm::ivec2(1, 0))].depth;
+		float rightHeight = grid[flatten<X>(pipePos)].depth;
+
+		float A = 1;
+		float g = 9.8;
+		float dt = .125;
+		float dx = 1; // CONSTANT (length of pipe)
+		float dh = rightHeight - leftHeight; // diff left->right
+
+		// flow from left to right
+		thPGrid[i].flow = A * (g / dx) * dh * dt;
+	}
+}
+
+
+template<int X, int Y, int Z>
+static void updateVPipesCPU(WaterCell* grid, Pipe* vPGrid, Pipe* tvPGrid)
+{
+	int n = (X) * (Z + 1);
+
+	for (int i = 0; i < n; i++)
+	{
+		float flow = vPGrid[i].flow;
+
+		glm::ivec2 pipePos = expand<Z + 1>(i);
+		//std::swap(pipePos.x, pipePos.y); // confusion
+
+		if (pipePos.y == 0 || pipePos.y == Z)
+		{
+			tvPGrid[i].flow = 0;
+			continue;
+		}
+
+		float downheight = grid[flatten<Z>(pipePos - glm::ivec2(0, 1))].depth;
+		float upheight = grid[flatten<Z>(pipePos)].depth;
+		float A = 1;
+		float g = 9.8;
+		float dt = .125;
+		float dx = 1;
+		float dh = upheight - downheight;
+
+		tvPGrid[i].flow = A * (g / dx) * dh * dt;
+	}
+}
+
+
+template<int X, int Y, int Z>
+static void updateGridWaterCPU(WaterCell* grid, WaterCell* tempGrid, Pipe* hPGrid, Pipe* vPGrid)
+{
+	int n = X * Y * Z;
+
+	for (int i = 0; i < n; i++)
+	{
+		float depth = grid[i].depth;
+
+		glm::ivec2 tp = expand<X>(i);
+		float sumflow = 0;
+
+		sumflow += hPGrid[flatten<X + 1>({ tp.y, tp.x })].flow;
+		sumflow -= hPGrid[flatten<X + 1>({ tp.y + 1, tp.x })].flow;
+		sumflow += vPGrid[flatten<Z + 1>({ tp.x, tp.y })].flow;
+		sumflow -= vPGrid[flatten<Z + 1>({ tp.x + 1, tp.y })].flow;
+
+		float dt = .125;
+		tempGrid[i].depth = depth + sumflow * -dt;
+	}
+}
+
+
+/*################################################################
+##################################################################
+					           END CPU SIMULATION CODE
+##################################################################
+################################################################*/
