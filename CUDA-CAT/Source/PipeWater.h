@@ -52,4 +52,5 @@ private:
 	class VAO* pVao = nullptr;
 
 	PipeUpdateArgs args;
+	bool calcNormals = true;
 };

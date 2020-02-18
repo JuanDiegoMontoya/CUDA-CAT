@@ -134,9 +134,6 @@
       <Filter>Debug</Filter>
     </ClInclude>
     <ClInclude Include="settings.h" />
-    <ClInclude Include="waterCA.h">
-      <Filter>CA</Filter>
-    </ClInclude>
     <ClInclude Include="CAMesh.h">
       <Filter>CA</Filter>
     </ClInclude>
@@ -238,9 +235,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <CudaCompile Include="waterCA.cu">
-      <Filter>CA</Filter>
-    </CudaCompile>
     <CudaCompile Include="GoL.cu">
       <Filter>CA</Filter>
     </CudaCompile>

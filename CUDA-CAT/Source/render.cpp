@@ -9,8 +9,6 @@
 #include "input.h"
 #include "render.h"
 
-#include "waterCA.h"
-
 #include "GoL.h"
 
 extern float dt__;
@@ -22,6 +20,9 @@ Renderer::Renderer() {}
 void Renderer::Init()
 {
 	automaton->Init();
+	//for (int i = 0; i < 500; i++)
+	//	automaton->Update();
+	//std::exit(0);
 }
 
 

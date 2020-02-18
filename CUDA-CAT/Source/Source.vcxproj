@@ -223,6 +223,9 @@ copy "$(SolutionDir)lib\CUDA\cudart64_102.dll" "$(TargetDir)cudart64_102.dll" /Y
     </PostBuildEvent>
     <CudaCompile />
     <CudaCompile />
+    <CudaCompile>
+      <TargetMachinePlatform>64</TargetMachinePlatform>
+    </CudaCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="CellularAutomata.cpp">
@@ -355,11 +358,9 @@ copy "$(SolutionDir)lib\CUDA\cudart64_102.dll" "$(TargetDir)cudart64_102.dll" /Y
     <ClInclude Include="vendor\imgui\stb_rect_pack.h" />
     <ClInclude Include="vendor\imgui\stb_textedit.h" />
     <ClInclude Include="vendor\imgui\stb_truetype.h" />
-    <ClInclude Include="waterCA.h" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="PipeWater.cu" />
-    <CudaCompile Include="waterCA.cu" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

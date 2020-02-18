@@ -265,6 +265,7 @@ void PipeWater<X, Y, Z>::Render()
 		ImGui::SliderFloat("dt", &args.dt, 0, 1, "%.2f s");
 		ImGui::SliderFloat("dx", &args.dx, 0, 5, "%.2f m");
 		ImGui::SliderFloat("g", &args.g, 0, 50, "%.2f m/s^2");
+		ImGui::Checkbox("Calculate Normals", &calcNormals);
 		//float sum = 0;
 		//for (int i = 0; i < X * Y * Z; i++)
 		//	sum += this->Grid[i].depth;
@@ -365,7 +366,10 @@ void PipeWater<X, Y, Z>::updatePlanarMesh()
 			glm::vec3 up = { x, Grid[indup].depth, z + 1};
 
 			vertices.push_back(cur);
-			vertices.push_back(glm::cross(up - cur, right - cur));
+			if (calcNormals)
+				vertices.push_back(glm::cross(up - cur, right - cur));
+			else
+				vertices.push_back({ 0, 1, 0 });
 		}
 	}
 
