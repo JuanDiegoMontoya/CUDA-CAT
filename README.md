@@ -11,10 +11,10 @@ All CA in this project have customizable parameters and size in three dimensions
 
 # Gallery
 
-![2D cave.](https://github.com/JuanDiegoMontoya/CUDA-CAT/tree/master/Images/cave2d.png "2D cave.")
-![3D cave.](https://github.com/JuanDiegoMontoya/CUDA-CAT/tree/master/Images/cave3d.png "3D cave.")
-![Conway's Game of Life (2D).](https://github.com/JuanDiegoMontoya/CUDA-CAT/tree/master/Images/gol2d.png "Conway's Game of Life (2D).")
-![Water simulation.](https://github.com/JuanDiegoMontoya/CUDA-CAT/tree/master/Images/water.png "Water simulation.")
+![2D cave.](https://github.com/JuanDiegoMontoya/CUDA-CAT/blob/master/Images/cave2d.png "2D cave.")
+![3D cave.](https://github.com/JuanDiegoMontoya/CUDA-CAT/blob/master/Images/cave3d.png "3D cave.")
+![Conway's Game of Life (2D).](https://github.com/JuanDiegoMontoya/CUDA-CAT/blob/master/Images/gol2d.png "Conway's Game of Life (2D).")
+![Water simulation.](https://github.com/JuanDiegoMontoya/CUDA-CAT/blob/master/Images/water.png "Water simulation.")
 
 <br/><br/><br/><br/><br/><br/><br/>
 <sup><sup>Yes, CAT stands for Cellular Automata Thingy</sup></sup>
