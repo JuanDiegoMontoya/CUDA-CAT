@@ -12,6 +12,13 @@ struct Pipe
 	float flow = 0; // Q += A*(g/dx)*dh*dt
 };
 
+struct PipeUpdateArgs
+{
+	float g = 9.8;
+	float dx = 1; // length of pipe
+	float dt = .125;
+};
+
 template<int X, int Y, int Z>
 class PipeWater : public CellularAutomata<WaterCell, X, Y, Z>
 {
@@ -43,4 +50,6 @@ private:
 	class IBO* pIbo = nullptr;
 	class VBO* pVbo = nullptr;
 	class VAO* pVao = nullptr;
+
+	PipeUpdateArgs args;
 };

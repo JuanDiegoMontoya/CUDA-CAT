@@ -18,4 +18,5 @@ void main()
 
 	vec3 sphong = u_color * (spec + diff);
 	FragColor = vec4(sphong, 1.0);
+	//FragColor = vec4(sphong * .01 + (normal * .5 + .5), 1.0);
 }

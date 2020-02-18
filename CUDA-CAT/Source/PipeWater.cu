@@ -25,7 +25,7 @@ template class PipeWater<500, 1, 500>;
 ################################################################*/
 
 template<int X, int Y, int Z>
-__global__ static void updateGridWater(WaterCell* grid, WaterCell* tempGrid, Pipe* hPGrid, Pipe* vPGrid)
+__global__ static void updateGridWater(WaterCell* grid, WaterCell* tempGrid, Pipe* hPGrid, Pipe* vPGrid, float dt)
 {
 	int index = blockIdx.x * blockDim.x + threadIdx.x;
 	int stride = blockDim.x * gridDim.x;
@@ -60,14 +60,14 @@ __global__ static void updateGridWater(WaterCell* grid, WaterCell* tempGrid, Pip
 		sumflow += vPGrid[flatten<Z + 1>({ tp.x, tp.y })].flow;
 		sumflow -= vPGrid[flatten<Z + 1>({ tp.x + 1, tp.y })].flow;
 
-		float dt = .125;
-		tempGrid[i].depth	= depth + sumflow * -dt;
+		//float dt = .125;
+		tempGrid[i].depth	= depth + (sumflow * -dt);
 	}
 }
 
 
 template<int X, int Y, int Z>
-__global__ static void updateHPipes(WaterCell* grid,  Pipe* hPGrid, Pipe* thPGrid)
+__global__ static void updateHPipes(WaterCell* grid,  Pipe* hPGrid, Pipe* thPGrid, PipeUpdateArgs args)
 {
 	int index = blockIdx.x * blockDim.x + threadIdx.x;
 	int stride = blockDim.x * gridDim.x;
@@ -111,13 +111,14 @@ __global__ static void updateHPipes(WaterCell* grid,  Pipe* hPGrid, Pipe* thPGri
 		float dh = rightHeight - leftHeight; // diff left->right
 
 		// flow from left to right
-		thPGrid[i].flow = flow + (A * (g / dx) * dh * dt);
+		//thPGrid[i].flow = flow + (A * (g / dx) * dh * dt);
+		thPGrid[i].flow = flow + (A * (args.g / args.dx) * dh) * args.dt;
 	}
 }
 
 
 template<int X, int Y, int Z>
-__global__ static void updateVPipes(WaterCell* grid, Pipe* vPGrid, Pipe* tvPGrid)
+__global__ static void updateVPipes(WaterCell* grid, Pipe* vPGrid, Pipe* tvPGrid, PipeUpdateArgs args)
 {
 	int index = blockIdx.x * blockDim.x + threadIdx.x;
 	int stride = blockDim.x * gridDim.x;
@@ -144,7 +145,8 @@ __global__ static void updateVPipes(WaterCell* grid, Pipe* vPGrid, Pipe* tvPGrid
 		float dx = 1;
 		float dh = upheight - downheight;
 
-		tvPGrid[i].flow = flow + (A * (g / dx) * dh * dt);
+		//tvPGrid[i].flow = flow + (A * (g / dx) * dh * dt);
+		tvPGrid[i].flow = flow + (A * (args.g / args.dx) * dh) * args.dt;
 	}
 }
 
@@ -197,6 +199,11 @@ void PipeWater<X, Y, Z>::Init()
 		}
 	}
 
+	for (int i = 0; i < (X + 1) * Z; i++)
+		hPGrid[i].flow = thPGrid[i].flow = 0;
+	for (int i = 0; i < (Z + 1) * X; i++)
+		vPGrid[i].flow = tvPGrid[i].flow = 0;
+
 	// init grids to be same
 	for (int i = 0; i < X * Z * Y; i++)
 		this->TGrid[i] = this->Grid[i];
@@ -208,20 +215,17 @@ void PipeWater<X, Y, Z>::Init()
 template<int X, int Y, int Z>
 void PipeWater<X, Y, Z>::Update()
 {
-	updateHPipes<X, Y, Z><<<hPNumBlocks, PBlockSize>>>(this->Grid, hPGrid, thPGrid);
+	updateHPipes<X, Y, Z><<<hPNumBlocks, PBlockSize>>>(this->Grid, hPGrid, thPGrid, args);
 	//updateHPipesCPU<X, Y, Z>(this->Grid, hPGrid, thPGrid);
-	updateVPipes<X, Y, Z><<<vPNumBlocks, PBlockSize>>>(this->Grid, vPGrid, tvPGrid);
+	updateVPipes<X, Y, Z><<<vPNumBlocks, PBlockSize>>>(this->Grid, vPGrid, tvPGrid, args);
 	//updateVPipesCPU<X, Y, Z>(this->Grid, vPGrid, tvPGrid);
 	cudaDeviceSynchronize();
 	std::swap(hPGrid, thPGrid);
 	std::swap(vPGrid, tvPGrid);
-	updateGridWater<X, Y, Z><<<numBlocks, blockSize>>>(this->Grid, this->TGrid, hPGrid, vPGrid);
+	updateGridWater<X, Y, Z><<<numBlocks, blockSize>>>(this->Grid, this->TGrid, hPGrid, vPGrid, args.dt);
 	//updateGridWaterCPU<X, Y, Z>(this->Grid, this->TGrid, hPGrid, vPGrid);
 	cudaDeviceSynchronize();
 
-	// TGrid contains updated grid values after update
-	// we no longer care about values in Grid anymore
-	// a simple swap of pointers will suffice
 	std::swap(this->Grid, this->TGrid);
 	this->UpdateMesh = true;
 }
@@ -256,6 +260,11 @@ void PipeWater<X, Y, Z>::Render()
 	{
 		ImGui::Begin("Piped Water Simulation");
 		ImGui::Text("Dimensions: X = %d, Z = %d", X, Z);
+		ImGui::Separator();
+		ImGui::Text("Changing settings may lead \n to explosive results");
+		ImGui::SliderFloat("dt", &args.dt, 0, 1, "%.2f s");
+		ImGui::SliderFloat("dx", &args.dx, 0, 5, "%.2f m");
+		ImGui::SliderFloat("g", &args.g, 0, 50, "%.2f m/s^2");
 		//float sum = 0;
 		//for (int i = 0; i < X * Y * Z; i++)
 		//	sum += this->Grid[i].depth;
@@ -327,29 +336,38 @@ template<int X, int Y, int Z>
 void PipeWater<X, Y, Z>::updatePlanarMesh()
 {
 	vertices.clear();
-	for (int i = 0; i < X * Z; i++)
-	{
-		auto xz = expand<X>(i);
-		auto xzUp = xz; xzUp.y++;
-		auto xzRight = xz; xzRight.x++;
-		glm::vec3 up = { xzUp.x, this->Grid[flatten<X>(xzUp)].depth, xzUp.y };
-		glm::vec3 right = { xzRight.x, this->Grid[flatten<X>(xzRight)].depth, xzRight.y };
-		glm::vec3 d = { xz.x, this->Grid[i].depth, xz.y };
-		vertices.push_back(d);
-		//vertices.push_back(glm::normalize(glm::cross(xz.y < Z ? up - d : d - up, xz.x < X ? right - d : d - right)));
-		// TODO: fix normals
-		vertices.push_back(glm::cross(up - d, right - d));
-		//vertices.push_back({ 0, 1, 0 });
-	}
-
-	//for (int x = 0; x < X; x++)
+	//for (int i = 0; i < X * Z; i++)
 	//{
-	//	for (int z = 0; z < Z; z++)
-	//	{
-	//		int ind = flatten<X>({ x, z });
-	//		glm::vec3 cur = {}
-	//	}
+	//	auto xz = expand<X>(i);
+	//	auto xzUp = xz; xzUp.y++;
+	//	auto xzRight = xz; xzRight.x++;
+	//	glm::vec3 up = { xzUp.x, this->Grid[flatten<X>(xzUp)].depth, xzUp.y };
+	//	glm::vec3 right = { xzRight.x, this->Grid[flatten<X>(xzRight)].depth, xzRight.y };
+	//	glm::vec3 d = { xz.x, this->Grid[i].depth, xz.y };
+	//	vertices.push_back(d);
+	//	//vertices.push_back(glm::normalize(glm::cross(xz.y < Z ? up - d : d - up, xz.x < X ? right - d : d - right)));
+	//	// TODO: fix normals
+	//	vertices.push_back(glm::cross(up - d, right - d));
+	//	//vertices.push_back({ 0, 1, 0 });
 	//}
+
+	for (int x = 0; x < X; x++)
+	{
+		for (int z = 0; z < Z; z++)
+		{
+			int ind = flatten<X>({ x, z });
+			int indup = flatten<X>({ x, z + 1 });
+			int indright = flatten<X>({ x + 1, z });
+			if (indup > X * Z) indup = ind;
+			if (indright > X * Z) indright = ind;
+			glm::vec3 cur = { x, Grid[ind].depth, z };
+			glm::vec3 right = { x + 1, Grid[indright].depth, z };
+			glm::vec3 up = { x, Grid[indup].depth, z + 1};
+
+			vertices.push_back(cur);
+			vertices.push_back(glm::cross(up - cur, right - cur));
+		}
+	}
 
 	pVbo->Bind();
 	glBufferSubData(GL_ARRAY_BUFFER,
