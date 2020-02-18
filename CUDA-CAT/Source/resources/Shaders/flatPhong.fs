@@ -16,5 +16,6 @@ void main()
 	float diff = max(dot(normal, -vec3(.2, -1, 0)), 0.0); // hard code light dir
 	float spec = max(dot(normal, viewDir), 0.0) * .2;
 
-	FragColor = vec4(u_color * (spec + diff), 1.0);
+	vec3 sphong = u_color * (spec + diff);
+	FragColor = vec4(sphong, 1.0);
 }

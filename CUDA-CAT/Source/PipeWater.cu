@@ -13,8 +13,9 @@
 //template class PipeWater<200, 1, 200>;
 //template class PipeWater<1, 1, 10>;
 //template class PipeWater<10, 1, 1>;
-template class PipeWater<10, 1, 10>;
+//template class PipeWater<10, 1, 10>;
 template class PipeWater<100, 1, 100>;
+template class PipeWater<500, 1, 500>;
 
 
 /*################################################################
@@ -167,6 +168,8 @@ PipeWater<X, Y, Z>::PipeWater()
 	auto ef = e1 | e2 | e3 | e4;
 	if (ef != cudaSuccess)
 		std::cout << "Error initializing shared memory!\n";
+
+	initPlanarMesh();
 }
 
 #define _USE_MATH_DEFINES
@@ -186,7 +189,8 @@ void PipeWater<X, Y, Z>::Init()
 				int index = x + yzpart;
 
 				//this->Grid[index].depth = Utils::get_random(7, 10);
-				this->Grid[index].depth = glm::distance(glm::vec2(x, z), glm::vec2(0, 0)) / 1.5f;
+				this->Grid[index].depth = glm::distance(glm::vec2(x, z), glm::vec2(0, 0)) / 5.0f +
+					cosf(x / 50.f) * 5 + sinf(z / 50.f) * 5 + 10;
 				//this->Grid[index].depth = sinf(z * M_PI / 5) + cosf(x * M_PI / 5) + 2;
 				//this->Grid[index].depth = cosf(z * M_PI / 5) + cosf(x * M_PI / 5) + 2;
 			}
@@ -197,7 +201,7 @@ void PipeWater<X, Y, Z>::Init()
 	for (int i = 0; i < X * Z * Y; i++)
 		this->TGrid[i] = this->Grid[i];
 
-	genMesh();
+	this->UpdateMesh = true;
 }
 
 
@@ -227,20 +231,31 @@ template<int X, int Y, int Z>
 void PipeWater<X, Y, Z>::Render()
 {
 	if (this->UpdateMesh)
-		genMesh(), this->UpdateMesh = false;
+		updatePlanarMesh(), this->UpdateMesh = false;
+	//if (this->UpdateMesh)
+	//	genMesh(), this->UpdateMesh = false;
 
 	ShaderPtr sr = Shader::shaders["flatPhong"];
 	sr->Use();
+	glm::mat4 model(1);
+	model = glm::translate(model, glm::vec3(150, 40, 80));
+	model = glm::scale(model, glm::vec3(.1, .1, .1));
 	sr->setMat4("u_proj", Render::GetCamera()->GetProj());
 	sr->setMat4("u_view", Render::GetCamera()->GetView());
-	sr->setMat4("u_model", glm::translate(glm::mat4(1), glm::vec3(150, 40, 80)));
+	sr->setMat4("u_model", model);
 	sr->setVec3("u_color", { .2, .7, .9 });
 	sr->setVec3("u_viewpos", Render::GetCamera()->GetPos());
 
-	this->mesh_->Draw();
+	//this->mesh_->Draw();
+	glDisable(GL_CULL_FACE);
+	pVao->Bind();
+	glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, nullptr);
+	pVao->Unbind();
+	glEnable(GL_CULL_FACE);
 
 	{
 		ImGui::Begin("Piped Water Simulation");
+		ImGui::Text("Dimensions: X = %d, Z = %d", X, Z);
 		//float sum = 0;
 		//for (int i = 0; i < X * Y * Z; i++)
 		//	sum += this->Grid[i].depth;
@@ -273,12 +288,75 @@ void PipeWater<X, Y, Z>::genMesh()
 template<int X, int Y, int Z>
 void PipeWater<X, Y, Z>::initPlanarMesh()
 {
+	vertices = std::vector<glm::vec3>(X * Z * 2, glm::vec3(0)); // num cells * attributes (pos + normal)
+	indices.reserve((X-1) * (Z-1) * 2 * 3); // num cells * num tris per cell * num verts per tri
+
+	// init indices
+	for (int x = 0; x < X - 1; x++)
+	{
+		// for each cell
+		for (int z = 0; z < Z - 1; z++)
+		{
+			GLuint one = flatten<X>(glm::ivec2(x, z));
+			GLuint two = flatten<X>(glm::ivec2(x + 1, z));
+			GLuint three = flatten<X>(glm::ivec2(x + 1, z + 1));
+			GLuint four = flatten<X>(glm::ivec2(x, z + 1));
+
+			indices.push_back(one);
+			indices.push_back(two);
+			indices.push_back(three);
+			
+			indices.push_back(one);
+			indices.push_back(three);
+			indices.push_back(four);
+		}
+	}
+
+	pVbo = new VBO(&vertices[0][0], vertices.size() * sizeof(glm::vec3), GL_DYNAMIC_DRAW);
+	VBOlayout layout;
+	layout.Push<float>(3);
+	layout.Push<float>(3);
+	pVao = new VAO();
+	pVao->AddBuffer(*pVbo, layout);
+	pIbo = new IBO(indices.data(), indices.size());
+	pVao->Unbind();
 }
 
 
 template<int X, int Y, int Z>
 void PipeWater<X, Y, Z>::updatePlanarMesh()
 {
+	vertices.clear();
+	for (int i = 0; i < X * Z; i++)
+	{
+		auto xz = expand<X>(i);
+		auto xzUp = xz; xzUp.y++;
+		auto xzRight = xz; xzRight.x++;
+		glm::vec3 up = { xzUp.x, this->Grid[flatten<X>(xzUp)].depth, xzUp.y };
+		glm::vec3 right = { xzRight.x, this->Grid[flatten<X>(xzRight)].depth, xzRight.y };
+		glm::vec3 d = { xz.x, this->Grid[i].depth, xz.y };
+		vertices.push_back(d);
+		//vertices.push_back(glm::normalize(glm::cross(xz.y < Z ? up - d : d - up, xz.x < X ? right - d : d - right)));
+		// TODO: fix normals
+		vertices.push_back(glm::cross(up - d, right - d));
+		//vertices.push_back({ 0, 1, 0 });
+	}
+
+	//for (int x = 0; x < X; x++)
+	//{
+	//	for (int z = 0; z < Z; z++)
+	//	{
+	//		int ind = flatten<X>({ x, z });
+	//		glm::vec3 cur = {}
+	//	}
+	//}
+
+	pVbo->Bind();
+	glBufferSubData(GL_ARRAY_BUFFER,
+		NULL,
+		vertices.size() * sizeof(glm::vec3),
+		vertices.data());
+	pVbo->Unbind();
 }
 
 

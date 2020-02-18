@@ -13,5 +13,6 @@ void main()
 {
   vPos = vec3(u_model * vec4(aPos, 1.0));
   vNormal = mat3(transpose(inverse(u_model))) * aNormal; // model->world space
+  //vNormal = aNormal;
   gl_Position = u_proj * u_view * vec4(vPos, 1.0);
 }

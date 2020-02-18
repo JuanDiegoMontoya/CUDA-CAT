@@ -12,7 +12,6 @@ struct Pipe
 	float flow = 0; // Q += A*(g/dx)*dh*dt
 };
 
-// TODO: TEST 2D VERSION FIRST
 template<int X, int Y, int Z>
 class PipeWater : public CellularAutomata<WaterCell, X, Y, Z>
 {
@@ -38,5 +37,10 @@ private:
 	Pipe* vPGrid = nullptr; // vertical (z axis)
 	Pipe* tvPGrid = nullptr; // temp
 
-	Mesh* pMesh_ = nullptr;
+	//Mesh* pMesh_ = nullptr;
+	std::vector<glm::vec3> vertices; // order doesn't change
+	std::vector<GLuint> indices; // immutable basically
+	class IBO* pIbo = nullptr;
+	class VBO* pVbo = nullptr;
+	class VAO* pVao = nullptr;
 };

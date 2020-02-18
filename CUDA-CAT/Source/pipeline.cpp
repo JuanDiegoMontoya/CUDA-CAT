@@ -66,7 +66,7 @@ namespace Render
 	std::unordered_map<const char*, Texture*, Utils::djb2hash, Utils::charPtrKeyEq> textures;
 	Camera* currCamera;
 	ShaderPtr currShader;
-	Renderer renderer;
+	//Renderer renderer;
 	LevelPtr currLevel = nullptr;
 	
 	void CalcModels(int low, int high)
