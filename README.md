@@ -8,5 +8,13 @@ All CA in this project have customizable parameters and size in three dimensions
 - Cave generator based on http://julian.togelius.com/Johnson2010Cellular.pdf
 - Fluid simulation as described in section 4.5 of https://tutcris.tut.fi/portal/files/4312220/kellomaki_1354.pdf
   - This one is not technically a cellular automata, but it fits the theme and the results are very interesting.
+
+# Gallery
+
+![2D cave.](https://github.com/JuanDiegoMontoya/CUDA-CAT/tree/master/Images/cave2d.png "2D cave.")
+![3D cave.](https://github.com/JuanDiegoMontoya/CUDA-CAT/tree/master/Images/cave3d.png "3D cave.")
+![Conway's Game of Life (2D).](https://github.com/JuanDiegoMontoya/CUDA-CAT/tree/master/Images/gol2d.png "Conway's Game of Life (2D).")
+![Water simulation.](https://github.com/JuanDiegoMontoya/CUDA-CAT/tree/master/Images/water.png "Water simulation.")
+
 <br/><br/><br/><br/><br/><br/><br/>
 <sup><sup>Yes, CAT stands for Cellular Automata Thingy</sup></sup>
