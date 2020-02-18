@@ -35,21 +35,22 @@ private:
 	// just update what is already there with much less CPU overhead
 	void initPlanarMesh();
 	void updatePlanarMesh();
-
-	const int PBlockSize = 128;
-	const int hPNumBlocks = ((X+1) * Z + PBlockSize - 1) / PBlockSize;
-	const int vPNumBlocks = (X * (Z+1) + PBlockSize - 1) / PBlockSize;
-	Pipe* hPGrid = nullptr; // horizontal (x axis)
-	Pipe* thPGrid = nullptr; // temp
-	Pipe* vPGrid = nullptr; // vertical (z axis)
-	Pipe* tvPGrid = nullptr; // temp
-
-	//Mesh* pMesh_ = nullptr;
 	std::vector<glm::vec3> vertices; // order doesn't change
 	std::vector<GLuint> indices; // immutable basically
 	class IBO* pIbo = nullptr;
 	class VBO* pVbo = nullptr;
 	class VAO* pVao = nullptr;
+
+	// use 
+	void initDepthTex();
+	void updateDepthTex();
+	GLuint depthTex;
+
+	const int PBlockSize = 128;
+	const int hPNumBlocks = ((X+1) * Z + PBlockSize - 1) / PBlockSize;
+	const int vPNumBlocks = (X * (Z+1) + PBlockSize - 1) / PBlockSize;
+	Pipe* hPGrid = nullptr; // horizontal (x axis)
+	Pipe* vPGrid = nullptr; // vertical (z axis)
 
 	PipeUpdateArgs args;
 	bool calcNormals = true;

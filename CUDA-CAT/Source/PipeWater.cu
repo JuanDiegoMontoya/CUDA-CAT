@@ -25,7 +25,7 @@ template class PipeWater<500, 1, 500>;
 ################################################################*/
 
 template<int X, int Y, int Z>
-__global__ static void updateGridWater(WaterCell* grid, WaterCell* tempGrid, Pipe* hPGrid, Pipe* vPGrid, float dt)
+__global__ static void updateGridWater(WaterCell* grid, Pipe* hPGrid, Pipe* vPGrid, float dt)
 {
 	int index = blockIdx.x * blockDim.x + threadIdx.x;
 	int stride = blockDim.x * gridDim.x;
@@ -61,13 +61,14 @@ __global__ static void updateGridWater(WaterCell* grid, WaterCell* tempGrid, Pip
 		sumflow -= vPGrid[flatten<Z + 1>({ tp.x + 1, tp.y })].flow;
 
 		//float dt = .125;
-		tempGrid[i].depth	= depth + (sumflow * -dt);
+		//tempGrid[i].depth	= depth + (sumflow * -dt);
+		grid[i].depth	= depth + (sumflow * -dt);
 	}
 }
 
 
 template<int X, int Y, int Z>
-__global__ static void updateHPipes(WaterCell* grid,  Pipe* hPGrid, Pipe* thPGrid, PipeUpdateArgs args)
+__global__ static void updateHPipes(WaterCell* grid,  Pipe* hPGrid, PipeUpdateArgs args)
 {
 	int index = blockIdx.x * blockDim.x + threadIdx.x;
 	int stride = blockDim.x * gridDim.x;
@@ -83,7 +84,7 @@ __global__ static void updateHPipes(WaterCell* grid,  Pipe* hPGrid, Pipe* thPGri
 
 		if (pipePos.x == 0 || pipePos.x == X)
 		{
-			thPGrid[i].flow = 0;
+			hPGrid[i].flow = 0;
 			continue;
 		}
 
@@ -112,13 +113,13 @@ __global__ static void updateHPipes(WaterCell* grid,  Pipe* hPGrid, Pipe* thPGri
 
 		// flow from left to right
 		//thPGrid[i].flow = flow + (A * (g / dx) * dh * dt);
-		thPGrid[i].flow = flow + (A * (args.g / args.dx) * dh) * args.dt;
+		hPGrid[i].flow = flow + (A * (args.g / args.dx) * dh) * args.dt;
 	}
 }
 
 
 template<int X, int Y, int Z>
-__global__ static void updateVPipes(WaterCell* grid, Pipe* vPGrid, Pipe* tvPGrid, PipeUpdateArgs args)
+__global__ static void updateVPipes(WaterCell* grid, Pipe* vPGrid, PipeUpdateArgs args)
 {
 	int index = blockIdx.x * blockDim.x + threadIdx.x;
 	int stride = blockDim.x * gridDim.x;
@@ -133,7 +134,7 @@ __global__ static void updateVPipes(WaterCell* grid, Pipe* vPGrid, Pipe* tvPGrid
 
 		if (pipePos.y == 0 || pipePos.y == Z)
 		{
-			tvPGrid[i].flow = 0;
+			vPGrid[i].flow = 0;
 			continue;
 		}
 
@@ -146,7 +147,7 @@ __global__ static void updateVPipes(WaterCell* grid, Pipe* vPGrid, Pipe* tvPGrid
 		float dh = upheight - downheight;
 
 		//tvPGrid[i].flow = flow + (A * (g / dx) * dh * dt);
-		tvPGrid[i].flow = flow + (A * (args.g / args.dx) * dh) * args.dt;
+		vPGrid[i].flow = flow + (A * (args.g / args.dx) * dh) * args.dt;
 	}
 }
 
@@ -162,12 +163,10 @@ template<int X, int Y, int Z>
 PipeWater<X, Y, Z>::PipeWater()
 {
 	auto e1 = cudaMallocManaged(&hPGrid, (X + 1) * (Z) * sizeof(Pipe));
-	auto e2 = cudaMallocManaged(&thPGrid, (X + 1) * (Z) * sizeof(Pipe));
 	auto e3 = cudaMallocManaged(&vPGrid, (X) * (Z + 1) * sizeof(Pipe));
-	auto e4 = cudaMallocManaged(&tvPGrid, (X) * (Z + 1) * sizeof(Pipe));
 
 	// will at least tell us something is wrong
-	auto ef = e1 | e2 | e3 | e4;
+	auto ef = e1 | e3;
 	if (ef != cudaSuccess)
 		std::cout << "Error initializing shared memory!\n";
 
@@ -200,13 +199,9 @@ void PipeWater<X, Y, Z>::Init()
 	}
 
 	for (int i = 0; i < (X + 1) * Z; i++)
-		hPGrid[i].flow = thPGrid[i].flow = 0;
+		hPGrid[i].flow = 0;
 	for (int i = 0; i < (Z + 1) * X; i++)
-		vPGrid[i].flow = tvPGrid[i].flow = 0;
-
-	// init grids to be same
-	for (int i = 0; i < X * Z * Y; i++)
-		this->TGrid[i] = this->Grid[i];
+		vPGrid[i].flow = 0;
 
 	this->UpdateMesh = true;
 }
@@ -215,18 +210,15 @@ void PipeWater<X, Y, Z>::Init()
 template<int X, int Y, int Z>
 void PipeWater<X, Y, Z>::Update()
 {
-	updateHPipes<X, Y, Z><<<hPNumBlocks, PBlockSize>>>(this->Grid, hPGrid, thPGrid, args);
+	updateHPipes<X, Y, Z><<<hPNumBlocks, PBlockSize>>>(this->Grid, hPGrid, args);
 	//updateHPipesCPU<X, Y, Z>(this->Grid, hPGrid, thPGrid);
-	updateVPipes<X, Y, Z><<<vPNumBlocks, PBlockSize>>>(this->Grid, vPGrid, tvPGrid, args);
+	updateVPipes<X, Y, Z><<<vPNumBlocks, PBlockSize>>>(this->Grid, vPGrid, args);
 	//updateVPipesCPU<X, Y, Z>(this->Grid, vPGrid, tvPGrid);
 	cudaDeviceSynchronize();
-	std::swap(hPGrid, thPGrid);
-	std::swap(vPGrid, tvPGrid);
-	updateGridWater<X, Y, Z><<<numBlocks, blockSize>>>(this->Grid, this->TGrid, hPGrid, vPGrid, args.dt);
+	updateGridWater<X, Y, Z><<<numBlocks, blockSize>>>(this->Grid, hPGrid, vPGrid, args.dt);
 	//updateGridWaterCPU<X, Y, Z>(this->Grid, this->TGrid, hPGrid, vPGrid);
 	cudaDeviceSynchronize();
 
-	std::swap(this->Grid, this->TGrid);
 	this->UpdateMesh = true;
 }
 
@@ -379,6 +371,51 @@ void PipeWater<X, Y, Z>::updatePlanarMesh()
 		vertices.size() * sizeof(glm::vec3),
 		vertices.data());
 	pVbo->Unbind();
+}
+
+
+template<int X, int Y, int Z>
+void PipeWater<X, Y, Z>::initDepthTex()
+{
+	vertices = std::vector<glm::vec3>(X * Z * 2, glm::vec3(0)); // num cells * attributes (pos + normal)
+	indices.reserve((X - 1) * (Z - 1) * 2 * 3); // num cells * num tris per cell * num verts per tri
+
+	// init indices
+	for (int x = 0; x < X - 1; x++)
+	{
+		// for each cell
+		for (int z = 0; z < Z - 1; z++)
+		{
+			GLuint one = flatten<X>(glm::ivec2(x, z));
+			GLuint two = flatten<X>(glm::ivec2(x + 1, z));
+			GLuint three = flatten<X>(glm::ivec2(x + 1, z + 1));
+			GLuint four = flatten<X>(glm::ivec2(x, z + 1));
+
+			indices.push_back(one);
+			indices.push_back(two);
+			indices.push_back(three);
+
+			indices.push_back(one);
+			indices.push_back(three);
+			indices.push_back(four);
+		}
+	}
+
+	pVbo = new VBO(&vertices[0][0], vertices.size() * sizeof(glm::vec3), GL_DYNAMIC_DRAW);
+	VBOlayout layout;
+	layout.Push<float>(2); // pos xz
+	layout.Push<float>(2); // texCoord
+	pVao = new VAO();
+	pVao->AddBuffer(*pVbo, layout);
+	pIbo = new IBO(indices.data(), indices.size());
+	pVao->Unbind();
+}
+
+
+template<int X, int Y, int Z>
+void PipeWater<X, Y, Z>::updateDepthTex()
+{
+
 }
 
 
