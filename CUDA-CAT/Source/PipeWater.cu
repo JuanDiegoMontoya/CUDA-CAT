@@ -9,6 +9,8 @@
 
 #include "CAMesh.h"
 #include "CommonDevice.cuh"
+#include "cuda_gl_interop.h"
+
 
 //template class PipeWater<200, 1, 200>;
 //template class PipeWater<1, 1, 10>;
@@ -171,6 +173,7 @@ PipeWater<X, Y, Z>::PipeWater()
 		std::cout << "Error initializing shared memory!\n";
 
 	initPlanarMesh();
+	//initDepthTex();
 }
 
 #define _USE_MATH_DEFINES
@@ -409,13 +412,22 @@ void PipeWater<X, Y, Z>::initDepthTex()
 	pVao->AddBuffer(*pVbo, layout);
 	pIbo = new IBO(indices.data(), indices.size());
 	pVao->Unbind();
+
+	glGenTextures(1, &depthTex);
+	glBindTexture(GL_TEXTURE_2D, depthTex);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, X, Z, 0, GL_RED, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	auto err = cudaGraphicsGLRegisterImage(&grDepthTex, depthTex, GL_TEXTURE_2D, cudaGraphicsRegisterFlagsNone);
+	if (err != cudaSuccess)
+		std::cout << "Error registering CUDA GL image!" << std::endl;
 }
 
 
 template<int X, int Y, int Z>
 void PipeWater<X, Y, Z>::updateDepthTex()
 {
-
 }
 
 

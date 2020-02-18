@@ -45,6 +45,7 @@ private:
 	void initDepthTex();
 	void updateDepthTex();
 	GLuint depthTex;
+	struct cudaGraphicsResource* grDepthTex;
 
 	const int PBlockSize = 128;
 	const int hPNumBlocks = ((X+1) * Z + PBlockSize - 1) / PBlockSize;
