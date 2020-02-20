@@ -43,7 +43,8 @@ public:
 	//PipeWater<10, 1, 10> Water4;
 	PipeWater<100, 1, 100> Water5;
 	PipeWater<500, 1, 500> Water6;
-	CAInterface* automaton = reinterpret_cast<CAInterface*>(&Water6);
+	PipeWater<2000, 1, 2000> Water7;
+	CAInterface* automaton = reinterpret_cast<CAInterface*>(&Water7);
 
 private:
 	void drawQuad();

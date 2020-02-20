@@ -7,6 +7,9 @@ out vec4 FragColor;
 
 in vec3 vPos;
 in vec3 vNormal;
+in vec2 vTexCoord;
+
+uniform sampler2D heightTex;
 
 void main()
 {
@@ -17,6 +20,9 @@ void main()
 	float spec = max(dot(normal, viewDir), 0.0) * .2;
 
 	vec3 sphong = u_color * (spec + diff);
+
+	float fake = texture(heightTex, vTexCoord).r;
+	//FragColor = vec4(sphong + fake / 1.0, 1.0);
 	FragColor = vec4(sphong, 1.0);
 	//FragColor = vec4(sphong * .01 + (normal * .5 + .5), 1.0);
 }

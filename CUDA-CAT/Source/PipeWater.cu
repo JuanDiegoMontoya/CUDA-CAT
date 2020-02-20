@@ -11,6 +11,7 @@
 #include "CommonDevice.cuh"
 #include "cuda_gl_interop.h"
 #include "vendor/helper_cuda.h"
+#include <map>
 
 //template class PipeWater<200, 1, 200>;
 //template class PipeWater<1, 1, 10>;
@@ -18,6 +19,7 @@
 //template class PipeWater<10, 1, 10>;
 template class PipeWater<100, 1, 100>;
 template class PipeWater<500, 1, 500>;
+template class PipeWater<2000, 1, 2000>;
 
 surface<void, 2> surfRef;
 
@@ -27,7 +29,47 @@ surface<void, 2> surfRef;
 ##################################################################
 ################################################################*/
 
-//surface<void, 2> surface2D;
+void printTex(int x, int y, GLuint texID)
+{
+	int numElements = x * y;
+	float* data = new float[numElements];
+
+	glBindTexture(GL_TEXTURE_2D, texID);
+	{
+		glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_FLOAT, data);
+	}
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	std::map<float, int> unique;
+	for (int i = 0; i < numElements; i++)
+	{
+		unique[data[i]]++;
+	}
+	// print how many times f.first appears
+	for (auto f : unique)
+		std::cout << f.first << " :: " << f.second << '\n';
+
+	delete[] data;
+}
+
+
+// init surface
+template<int X, int Y, int Z>
+__global__ static void perturbGrid()
+{
+	int index = blockIdx.x * blockDim.x + threadIdx.x;
+	int stride = blockDim.x * gridDim.x;
+	int n = X * Y * Z;
+
+	for (int i = index; i < n; i += stride)
+	{
+		glm::ivec2 tp = expand<X>(i);
+
+		float h = glm::distance(glm::vec2(tp.x, tp.y), glm::vec2(0, 0)) / 5.0f +
+			cosf(tp.x / 50.f) * 5 + sinf(tp.y / 50.f) * 5 + 10;
+		surf2Dwrite(h, surfRef, tp.x * sizeof(float), tp.y);
+	}
+}
 
 template<int X, int Y, int Z>
 __global__ static void updateGridWater(WaterCell* grid, Pipe* hPGrid, Pipe* vPGrid, float dt)
@@ -68,8 +110,8 @@ __global__ static void updateGridWater(WaterCell* grid, Pipe* hPGrid, Pipe* vPGr
 		//float dt = .125;
 		//tempGrid[i].depth	= depth + (sumflow * -dt);
 		grid[i].depth	= depth + (sumflow * -dt);
-		//surf2Dwrite(depth + (sumflow * -dt), surfRef, tp.x * sizeof(float), tp.y);
-		surf2Dwrite(sinf(n) * 10, surfRef, tp.x * sizeof(float), tp.y);
+		surf2Dwrite(depth + (sumflow * -dt), surfRef, tp.x * sizeof(float), tp.y);
+		//surf2Dwrite(float(blockIdx.x) / 100, surfRef, tp.x * sizeof(float), tp.y);
 	}
 }
 
@@ -194,6 +236,7 @@ PipeWater<X, Y, Z>::~PipeWater()
 template<int X, int Y, int Z>
 void PipeWater<X, Y, Z>::Init()
 {
+	return;
 	// populate the grid with water
 	for (int z = 0; z < Z; z++)
 	{
@@ -238,17 +281,20 @@ void PipeWater<X, Y, Z>::Update()
 	if (cudaGraphicsSubResourceGetMappedArray(&arr, imageResource, 0, 0))
 		printf("2ERROR\n");
 	int err = cudaBindSurfaceToArray(surfRef, arr);
-	if(err) // TODO: figure what is causing this error
+	if(err)
 		printf("3ERROR\n");
 	
-	
+
+	//printTex(X, Z, HeightTex);
 
 	updateGridWater<X, Y, Z><<<numBlocks, blockSize>>>(this->Grid, hPGrid, vPGrid, args.dt);
+	//updateGridWaterCPU<X, Y, Z>(this->Grid, this->TGrid, hPGrid, vPGrid);
+	cudaDeviceSynchronize();
 	err = cudaGraphicsUnmapResources(1, &imageResource, 0);
 	if (err)
 		printf("4ERROR\n");
-	//updateGridWaterCPU<X, Y, Z>(this->Grid, this->TGrid, hPGrid, vPGrid);
-	cudaDeviceSynchronize();
+
+	//printTex(X, Z, HeightTex);
 
 	this->UpdateMesh = true;
 }
@@ -273,9 +319,9 @@ void PipeWater<X, Y, Z>::Render()
 	sr->setMat4("u_model", model);
 	sr->setVec3("u_color", { .2, .7, .9 });
 	sr->setVec3("u_viewpos", Render::GetCamera()->GetPos());
-	sr->setInt("heightTex", HeightTex);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, HeightTex);
+	sr->setInt("heightTex", 0);
 
 	//this->mesh_->Draw();
 	glDisable(GL_CULL_FACE);
@@ -300,6 +346,8 @@ void PipeWater<X, Y, Z>::Render()
 		//ImGui::Text("Avg height: %.2f", sum / (X * Y * Z));
 		ImGui::End();
 	}
+
+	//printTex(X, Z, HeightTex);
 }
 
 
@@ -465,7 +513,7 @@ void PipeWater<X, Y, Z>::initDepthTex()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
-	GLfloat height = 100;
+	GLfloat height = 6.9;
 	glClearTexImage(HeightTex, 0, GL_RED, GL_FLOAT, &height);
 
 	auto err = cudaGraphicsGLRegisterImage(&imageResource, HeightTex, GL_TEXTURE_2D, cudaGraphicsRegisterFlagsSurfaceLoadStore);
@@ -479,6 +527,17 @@ void PipeWater<X, Y, Z>::initDepthTex()
 	//	std::cout << "Error mallocing cuda array: " << err << std::endl;
 	
 
+	if (cudaGraphicsMapResources(1, &imageResource, 0))
+		printf("1ERROR\n");
+	if (cudaGraphicsSubResourceGetMappedArray(&arr, imageResource, 0, 0))
+		printf("2ERROR\n");
+	err = cudaBindSurfaceToArray(surfRef, arr);
+	if (err)
+		printf("3ERROR\n");
+	perturbGrid<X, Y, Z><<<numBlocks, blockSize>>>();
+	err = cudaGraphicsUnmapResources(1, &imageResource, 0);
+	if (err)
+		printf("4ERROR\n");
 }
 
 

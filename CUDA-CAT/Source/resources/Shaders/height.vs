@@ -8,19 +8,21 @@ uniform mat4 u_model;
 
 out vec3 vPos;
 out vec3 vNormal;
+out vec2 vTexCoord;
 
 uniform sampler2D heightTex; // height field
 //uniform vec2 dim; // dimensions of heightTex
 
 void main()
 {
+	vTexCoord = aTexCoord;
 	vec2 dim = textureSize(heightTex, 0);
 	float height = texture(heightTex, aTexCoord).r;
 	float uHeight = texture(heightTex, vec2(aTexCoord.x, aTexCoord.y + 1 / dim.y)).r;
 	float rHeight = texture(heightTex, vec2(aTexCoord.x + 1 / dim.x, aTexCoord.y)).r;
 	vec3 aPos = vec3(aPosXZ.x, height, aPosXZ.y);
-	if (aTexCoord.y > .5)
-		aPos.y = 100;
+	//if (aTexCoord.y > .5)
+	//	aPos.y = 100;
 	vec3 aPosU = vec3(aPosXZ.x, uHeight, aPosXZ.y + 1);
 	vec3 aPosR = vec3(aPosXZ.x + 1, rHeight, aPosXZ.y);
 	vec3 aNormal = cross(aPosU - aPos, aPosR - aPos);
