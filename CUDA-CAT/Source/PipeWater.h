@@ -24,6 +24,7 @@ class PipeWater : public CellularAutomata<WaterCell, X, Y, Z>
 {
 public:
 	PipeWater();
+	~PipeWater();
 	virtual void Init() override;
 	virtual void Update() override;
 	virtual void Render() override;
@@ -36,6 +37,7 @@ private:
 	void initPlanarMesh();
 	void updatePlanarMesh();
 	std::vector<glm::vec3> vertices; // order doesn't change
+	std::vector<glm::vec2> vertices2d; // order doesn't change
 	std::vector<GLuint> indices; // immutable basically
 	class IBO* pIbo = nullptr;
 	class VBO* pVbo = nullptr;
@@ -44,8 +46,9 @@ private:
 	// use 
 	void initDepthTex();
 	void updateDepthTex();
-	GLuint depthTex;
-	struct cudaGraphicsResource* grDepthTex;
+	GLuint HeightTex;
+	struct cudaGraphicsResource* imageResource;
+	struct cudaArray* arr;
 
 	const int PBlockSize = 128;
 	const int hPNumBlocks = ((X+1) * Z + PBlockSize - 1) / PBlockSize;

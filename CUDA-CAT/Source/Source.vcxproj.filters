@@ -152,6 +152,12 @@
     <ClInclude Include="PipeWater.h">
       <Filter>CA</Filter>
     </ClInclude>
+    <ClInclude Include="vendor\helper_cuda.h">
+      <Filter>vendor</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\helper_string.h">
+      <Filter>vendor</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="sys_window.cpp">

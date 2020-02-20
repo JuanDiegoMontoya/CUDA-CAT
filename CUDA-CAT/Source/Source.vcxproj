@@ -347,6 +347,8 @@ copy "$(SolutionDir)lib\CUDA\cudart64_102.dll" "$(TargetDir)cudart64_102.dll" /Y
     <ClInclude Include="vbo.h" />
     <ClInclude Include="vbo_layout.h" />
     <ClInclude Include="vendor\ctpl_stl.h" />
+    <ClInclude Include="vendor\helper_cuda.h" />
+    <ClInclude Include="vendor\helper_string.h" />
     <ClInclude Include="vendor\imgui\imconfig.h" />
     <ClInclude Include="vendor\imgui\imgui.h" />
     <ClInclude Include="vendor\imgui\imgui_impl_glfw.h" />

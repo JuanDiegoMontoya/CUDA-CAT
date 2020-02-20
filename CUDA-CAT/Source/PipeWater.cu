@@ -10,7 +10,7 @@
 #include "CAMesh.h"
 #include "CommonDevice.cuh"
 #include "cuda_gl_interop.h"
-
+#include "vendor/helper_cuda.h"
 
 //template class PipeWater<200, 1, 200>;
 //template class PipeWater<1, 1, 10>;
@@ -19,12 +19,15 @@
 template class PipeWater<100, 1, 100>;
 template class PipeWater<500, 1, 500>;
 
+surface<void, 2> surfRef;
 
 /*################################################################
 ##################################################################
 										      KERNEL CODE
 ##################################################################
 ################################################################*/
+
+//surface<void, 2> surface2D;
 
 template<int X, int Y, int Z>
 __global__ static void updateGridWater(WaterCell* grid, Pipe* hPGrid, Pipe* vPGrid, float dt)
@@ -35,10 +38,10 @@ __global__ static void updateGridWater(WaterCell* grid, Pipe* hPGrid, Pipe* vPGr
 
 	for (int i = index; i < n; i += stride)
 	{
-		float depth = grid[i].depth;
-
-		// almost certainly using pipe grid index (pipe->vec2)
 		glm::ivec2 tp = expand<X>(i);
+		float depth;// = grid[i].depth;
+		surf2Dread(&depth, surfRef, tp.x * sizeof(float), tp.y);
+
 
 		// d += -dt*(SUM(Q)/(dx)^2)
 		// add to depth flow of adjacent pipes
@@ -65,6 +68,8 @@ __global__ static void updateGridWater(WaterCell* grid, Pipe* hPGrid, Pipe* vPGr
 		//float dt = .125;
 		//tempGrid[i].depth	= depth + (sumflow * -dt);
 		grid[i].depth	= depth + (sumflow * -dt);
+		//surf2Dwrite(depth + (sumflow * -dt), surfRef, tp.x * sizeof(float), tp.y);
+		surf2Dwrite(sinf(n) * 10, surfRef, tp.x * sizeof(float), tp.y);
 	}
 }
 
@@ -172,9 +177,17 @@ PipeWater<X, Y, Z>::PipeWater()
 	if (ef != cudaSuccess)
 		std::cout << "Error initializing shared memory!\n";
 
-	initPlanarMesh();
-	//initDepthTex();
+	//initPlanarMesh();
+	initDepthTex();
 }
+
+
+template<int X, int Y, int Z>
+PipeWater<X, Y, Z>::~PipeWater()
+{
+	cudaGraphicsUnregisterResource(imageResource);
+}
+
 
 #define _USE_MATH_DEFINES
 #include <math.h>
@@ -218,7 +231,22 @@ void PipeWater<X, Y, Z>::Update()
 	updateVPipes<X, Y, Z><<<vPNumBlocks, PBlockSize>>>(this->Grid, vPGrid, args);
 	//updateVPipesCPU<X, Y, Z>(this->Grid, vPGrid, tvPGrid);
 	cudaDeviceSynchronize();
+
+
+	if (cudaGraphicsMapResources(1, &imageResource, 0))
+		printf("1ERROR\n");
+	if (cudaGraphicsSubResourceGetMappedArray(&arr, imageResource, 0, 0))
+		printf("2ERROR\n");
+	int err = cudaBindSurfaceToArray(surfRef, arr);
+	if(err) // TODO: figure what is causing this error
+		printf("3ERROR\n");
+	
+	
+
 	updateGridWater<X, Y, Z><<<numBlocks, blockSize>>>(this->Grid, hPGrid, vPGrid, args.dt);
+	err = cudaGraphicsUnmapResources(1, &imageResource, 0);
+	if (err)
+		printf("4ERROR\n");
 	//updateGridWaterCPU<X, Y, Z>(this->Grid, this->TGrid, hPGrid, vPGrid);
 	cudaDeviceSynchronize();
 
@@ -229,12 +257,13 @@ void PipeWater<X, Y, Z>::Update()
 template<int X, int Y, int Z>
 void PipeWater<X, Y, Z>::Render()
 {
-	if (this->UpdateMesh)
-		updatePlanarMesh(), this->UpdateMesh = false;
+	//if (this->UpdateMesh)
+	//	updatePlanarMesh(), this->UpdateMesh = false;
 	//if (this->UpdateMesh)
 	//	genMesh(), this->UpdateMesh = false;
 
-	ShaderPtr sr = Shader::shaders["flatPhong"];
+	//ShaderPtr sr = Shader::shaders["flatPhong"];
+	ShaderPtr sr = Shader::shaders["height"];
 	sr->Use();
 	glm::mat4 model(1);
 	model = glm::translate(model, glm::vec3(150, 40, 80));
@@ -244,6 +273,9 @@ void PipeWater<X, Y, Z>::Render()
 	sr->setMat4("u_model", model);
 	sr->setVec3("u_color", { .2, .7, .9 });
 	sr->setVec3("u_viewpos", Render::GetCamera()->GetPos());
+	sr->setInt("heightTex", HeightTex);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, HeightTex);
 
 	//this->mesh_->Draw();
 	glDisable(GL_CULL_FACE);
@@ -380,8 +412,18 @@ void PipeWater<X, Y, Z>::updatePlanarMesh()
 template<int X, int Y, int Z>
 void PipeWater<X, Y, Z>::initDepthTex()
 {
-	vertices = std::vector<glm::vec3>(X * Z * 2, glm::vec3(0)); // num cells * attributes (pos + normal)
+	//vertices2d = std::vector<glm::vec2>(X * Z * 2, glm::vec2(0)); // num cells * attributes (pos + normal)
+	vertices2d.reserve(X * Z * 2);
 	indices.reserve((X - 1) * (Z - 1) * 2 * 3); // num cells * num tris per cell * num verts per tri
+	
+	for (int x = 0; x < X; x++)
+	{
+		for (int z = 0; z < Z; z++)
+		{
+			vertices2d.push_back({ (float)x, float(z) }); // pos xz
+			vertices2d.push_back({ float(x) / float(X), float(z) / float(Z) }); // texcoord
+		}
+	}
 
 	// init indices
 	for (int x = 0; x < X - 1; x++)
@@ -404,7 +446,7 @@ void PipeWater<X, Y, Z>::initDepthTex()
 		}
 	}
 
-	pVbo = new VBO(&vertices[0][0], vertices.size() * sizeof(glm::vec3), GL_DYNAMIC_DRAW);
+	pVbo = new VBO(&vertices2d[0], vertices2d.size() * sizeof(glm::vec2), GL_DYNAMIC_DRAW);
 	VBOlayout layout;
 	layout.Push<float>(2); // pos xz
 	layout.Push<float>(2); // texCoord
@@ -413,15 +455,30 @@ void PipeWater<X, Y, Z>::initDepthTex()
 	pIbo = new IBO(indices.data(), indices.size());
 	pVao->Unbind();
 
-	glGenTextures(1, &depthTex);
-	glBindTexture(GL_TEXTURE_2D, depthTex);
+	// Generate 2D texture with 1 float element
+	glGenTextures(1, &HeightTex);
+	glBindTexture(GL_TEXTURE_2D, HeightTex);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, X, Z, 0, GL_RED, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	glBindTexture(GL_TEXTURE_2D, 0);
 
-	auto err = cudaGraphicsGLRegisterImage(&grDepthTex, depthTex, GL_TEXTURE_2D, cudaGraphicsRegisterFlagsNone);
+	GLfloat height = 100;
+	glClearTexImage(HeightTex, 0, GL_RED, GL_FLOAT, &height);
+
+	auto err = cudaGraphicsGLRegisterImage(&imageResource, HeightTex, GL_TEXTURE_2D, cudaGraphicsRegisterFlagsSurfaceLoadStore);
 	if (err != cudaSuccess)
-		std::cout << "Error registering CUDA GL image!" << std::endl;
+		std::cout << "Error registering CUDA image: " << err << std::endl;
+
+	// not sure if these 2 lines are necessary
+	//cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<float>();
+	//err = cudaMallocArray(&arr, &channelDesc, X, Z, cudaArraySurfaceLoadStore);
+	//if (err != cudaSuccess)
+	//	std::cout << "Error mallocing cuda array: " << err << std::endl;
+	
+
 }
 
 
