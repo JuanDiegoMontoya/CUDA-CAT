@@ -89,7 +89,7 @@ void Level::DrawImGui()
 	}
 
 	{
-		ImGui::Begin("CA Simulation");
+		ImGui::Begin("Simulation");
 		ImGui::Text("Game of Life");
 		if (ImGui::RadioButton("2D##gol", renderer_.automaton == (void*)&renderer_.GoL2))
 			renderer_.automaton = reinterpret_cast<CAInterface*>(&renderer_.GoL2), renderer_.automaton->Init();
@@ -104,7 +104,7 @@ void Level::DrawImGui()
 		if (ImGui::RadioButton("3D##cave", renderer_.automaton == (void*)&renderer_.Caver4))
 			renderer_.automaton = reinterpret_cast<CAInterface*>(&renderer_.Caver4), renderer_.automaton->Init();
 
-		ImGui::Text("Water Simulation");
+		ImGui::Text("Water");
 		if (ImGui::RadioButton("Small##water", renderer_.automaton == (void*)&renderer_.Water5))
 			renderer_.automaton = reinterpret_cast<CAInterface*>(&renderer_.Water5), renderer_.automaton->Init();
 		ImGui::SameLine();
