@@ -67,17 +67,17 @@ __global__ static void perturbGrid(glm::ivec2 pos)
 
 		float h = 0;
 		//surf2Dread(&h, surfRef, tp.x * sizeof(float), tp.y);
-		h -= 50 / glm::distance(glm::vec2(tp.x, tp.y), glm::vec2(pos));
+		h += 100 / glm::distance(glm::vec2(tp.x, tp.y), glm::vec2(pos));
 		//h = glm::distance(glm::vec2(tp.x, tp.y), glm::vec2(0, 0));
-		if (h > 250) h = 250;
-		if (h < -250) h = -250;
+		if (h > 100) h = 100;
+		if (h < 8.5) h = 8.5;
 		//if (h < 5.) continue;
 		surf2Dwrite(h, surfRef, tp.x * sizeof(float), tp.y);
 	}
 }
 
 template<int X, int Y, int Z>
-__global__ static void updateGridWater(WaterCell* grid, Pipe* hPGrid, Pipe* vPGrid, float dt)
+__global__ static void updateGridWater(Pipe* hPGrid, Pipe* vPGrid, float dt)
 {
 	int index = blockIdx.x * blockDim.x + threadIdx.x;
 	int stride = blockDim.x * gridDim.x;
@@ -112,9 +112,6 @@ __global__ static void updateGridWater(WaterCell* grid, Pipe* hPGrid, Pipe* vPGr
 		sumflow += vPGrid[flatten<Z + 1>({ tp.x, tp.y })].flow;
 		sumflow -= vPGrid[flatten<Z + 1>({ tp.x + 1, tp.y })].flow;
 
-		//float dt = .125;
-		//tempGrid[i].depth	= depth + (sumflow * -dt);
-		grid[i].depth	= depth + (sumflow * -dt);
 		surf2Dwrite(depth + (sumflow * -dt), surfRef, tp.x * sizeof(float), tp.y);
 		//surf2Dwrite(float(blockIdx.x) / 100, surfRef, tp.x * sizeof(float), tp.y);
 	}
@@ -122,7 +119,7 @@ __global__ static void updateGridWater(WaterCell* grid, Pipe* hPGrid, Pipe* vPGr
 
 
 template<int X, int Y, int Z>
-__global__ static void updateHPipes(WaterCell* grid,  Pipe* hPGrid, PipeUpdateArgs args)
+__global__ static void updateHPipes(Pipe* hPGrid, PipeUpdateArgs args)
 {
 	int index = blockIdx.x * blockDim.x + threadIdx.x;
 	int stride = blockDim.x * gridDim.x;
@@ -149,8 +146,10 @@ __global__ static void updateHPipes(WaterCell* grid,  Pipe* hPGrid, PipeUpdateAr
 		but not for the right cell.
 		*/
 		// (vec2->normal!) USE NORMAL GRID INDEX
-		float leftHeight = grid[flatten<X>(pipePos - glm::ivec2(1, 0))].depth;
-		float rightHeight = grid[flatten<X>(pipePos)].depth;
+		float leftHeight;
+		float rightHeight;
+		surf2Dread(&leftHeight, surfRef, pipePos.y * sizeof(float), pipePos.x - 1);
+		surf2Dread(&rightHeight, surfRef, pipePos.y * sizeof(float), pipePos.x);
 
 		// A = cross section
 		// A = d (w/ line above) * dx       # OPTIONAL
@@ -173,7 +172,7 @@ __global__ static void updateHPipes(WaterCell* grid,  Pipe* hPGrid, PipeUpdateAr
 
 
 template<int X, int Y, int Z>
-__global__ static void updateVPipes(WaterCell* grid, Pipe* vPGrid, PipeUpdateArgs args)
+__global__ static void updateVPipes(Pipe* vPGrid, PipeUpdateArgs args)
 {
 	int index = blockIdx.x * blockDim.x + threadIdx.x;
 	int stride = blockDim.x * gridDim.x;
@@ -192,8 +191,10 @@ __global__ static void updateVPipes(WaterCell* grid, Pipe* vPGrid, PipeUpdateArg
 			continue;
 		}
 
-		float downheight = grid[flatten<Z>(pipePos - glm::ivec2(0, 1))].depth;
-		float upheight = grid[flatten<Z>(pipePos)].depth;
+		float downheight;
+		float upheight;
+		surf2Dread(&downheight, surfRef, pipePos.x * sizeof(float), pipePos.y - 1);
+		surf2Dread(&upheight, surfRef, pipePos.x * sizeof(float), pipePos.y);
 		float A = 1;
 		float g = 9.8;
 		float dt = .125;
@@ -274,25 +275,25 @@ void PipeWater<X, Y, Z>::Init()
 template<int X, int Y, int Z>
 void PipeWater<X, Y, Z>::Update()
 {
-	updateHPipes<X, Y, Z><<<hPNumBlocks, PBlockSize>>>(this->Grid, hPGrid, args);
-	//updateHPipesCPU<X, Y, Z>(this->Grid, hPGrid, thPGrid);
-	updateVPipes<X, Y, Z><<<vPNumBlocks, PBlockSize>>>(this->Grid, vPGrid, args);
-	//updateVPipesCPU<X, Y, Z>(this->Grid, vPGrid, tvPGrid);
-	cudaDeviceSynchronize();
-
 
 	if (cudaGraphicsMapResources(1, &imageResource, 0))
 		printf("1ERROR\n");
 	if (cudaGraphicsSubResourceGetMappedArray(&arr, imageResource, 0, 0))
 		printf("2ERROR\n");
 	int err = cudaBindSurfaceToArray(surfRef, arr);
-	if(err)
+	if (err)
 		printf("3ERROR\n");
-	
+
+	updateHPipes<X, Y, Z><<<hPNumBlocks, PBlockSize>>>(hPGrid, args);
+	//updateHPipesCPU<X, Y, Z>(this->Grid, hPGrid, thPGrid);
+	updateVPipes<X, Y, Z><<<vPNumBlocks, PBlockSize>>>(vPGrid, args);
+	//updateVPipesCPU<X, Y, Z>(this->Grid, vPGrid, tvPGrid);
+	cudaDeviceSynchronize();
+
 
 	//printTex(X, Z, HeightTex);
 
-	updateGridWater<X, Y, Z><<<numBlocks, blockSize>>>(this->Grid, hPGrid, vPGrid, args.dt);
+	updateGridWater<X, Y, Z><<<numBlocks, blockSize>>>(hPGrid, vPGrid, args.dt);
 	//updateGridWaterCPU<X, Y, Z>(this->Grid, this->TGrid, hPGrid, vPGrid);
 	cudaDeviceSynchronize();
 	err = cudaGraphicsUnmapResources(1, &imageResource, 0);
@@ -349,10 +350,11 @@ void PipeWater<X, Y, Z>::Render()
 			cudaGraphicsMapResources(1, &imageResource, 0);
 			cudaGraphicsSubResourceGetMappedArray(&arr, imageResource, 0, 0);
 			cudaBindSurfaceToArray(surfRef, arr);
-			for (int i = 0; i < 10; i++)
-			{
-				perturbGrid<X, Y, Z> << <numBlocks, blockSize >> > (splashLoc + glm::ivec2(i * 15, i * 15));
-			}
+			perturbGrid<X, Y, Z> << <numBlocks, blockSize >> > (splashLoc);
+			//for (int i = 0; i < 10; i++)
+			//{
+			//	perturbGrid<X, Y, Z> << <numBlocks, blockSize >> > (splashLoc + glm::ivec2(i * 25, i * 25));
+			//}
 			cudaGraphicsUnmapResources(1, &imageResource, 0);
 		}
 		ImGui::InputInt2("Splash location", &splashLoc[0]);

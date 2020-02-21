@@ -23,6 +23,6 @@ void main()
 
 	float fake = texture(heightTex, vTexCoord).r;
 	//FragColor = vec4(sphong + fake / 1.0, 1.0);
-	FragColor = vec4(sphong, 1.0);
-	//FragColor = vec4(sphong * .01 + (normal * .5 + .5), 1.0);
+	//FragColor = vec4(sphong, 1.0);
+	FragColor = vec4(sphong * .01 + (normal * .5 + .5), 1.0);
 }

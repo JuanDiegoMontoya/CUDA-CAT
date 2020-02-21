@@ -47,6 +47,9 @@ void Camera::Update(float dt)
 		temp.z = cos(glm::radians(pitch_)) * sin(glm::radians(yaw_));
 		front = glm::normalize(temp);
 		dir_ = front;
+
+		//if (Input::Mouse().screenOffset.x)
+		worldpos_ += 10 * Input::Mouse().scrollOffset.y * front;
 		break;
 	case kAffixedCam: // attached to an object, possibly follows directionality
 		// TODO: add behavior to follow object
