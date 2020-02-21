@@ -58,4 +58,5 @@ private:
 
 	PipeUpdateArgs args;
 	bool calcNormals = true;
+	glm::ivec2 splashLoc;
 };

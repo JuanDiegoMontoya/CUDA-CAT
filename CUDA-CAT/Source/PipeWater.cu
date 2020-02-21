@@ -55,7 +55,7 @@ void printTex(int x, int y, GLuint texID)
 
 // init surface
 template<int X, int Y, int Z>
-__global__ static void perturbGrid()
+__global__ static void perturbGrid(glm::ivec2 pos)
 {
 	int index = blockIdx.x * blockDim.x + threadIdx.x;
 	int stride = blockDim.x * gridDim.x;
@@ -65,8 +65,13 @@ __global__ static void perturbGrid()
 	{
 		glm::ivec2 tp = expand<X>(i);
 
-		float h = glm::distance(glm::vec2(tp.x, tp.y), glm::vec2(0, 0)) / 5.0f +
-			cosf(tp.x / 50.f) * 5 + sinf(tp.y / 50.f) * 5 + 10;
+		float h = 0;
+		//surf2Dread(&h, surfRef, tp.x * sizeof(float), tp.y);
+		h -= 50 / glm::distance(glm::vec2(tp.x, tp.y), glm::vec2(pos));
+		//h = glm::distance(glm::vec2(tp.x, tp.y), glm::vec2(0, 0));
+		if (h > 250) h = 250;
+		if (h < -250) h = -250;
+		//if (h < 5.) continue;
 		surf2Dwrite(h, surfRef, tp.x * sizeof(float), tp.y);
 	}
 }
@@ -339,6 +344,18 @@ void PipeWater<X, Y, Z>::Render()
 		ImGui::SliderFloat("dx", &args.dx, 0, 5, "%.2f m");
 		ImGui::SliderFloat("g", &args.g, 0, 50, "%.2f m/s^2");
 		ImGui::Checkbox("Calculate Normals", &calcNormals);
+		if (ImGui::Button("Splash water"))
+		{
+			cudaGraphicsMapResources(1, &imageResource, 0);
+			cudaGraphicsSubResourceGetMappedArray(&arr, imageResource, 0, 0);
+			cudaBindSurfaceToArray(surfRef, arr);
+			for (int i = 0; i < 10; i++)
+			{
+				perturbGrid<X, Y, Z> << <numBlocks, blockSize >> > (splashLoc + glm::ivec2(i * 15, i * 15));
+			}
+			cudaGraphicsUnmapResources(1, &imageResource, 0);
+		}
+		ImGui::InputInt2("Splash location", &splashLoc[0]);
 		//float sum = 0;
 		//for (int i = 0; i < X * Y * Z; i++)
 		//	sum += this->Grid[i].depth;
@@ -513,7 +530,7 @@ void PipeWater<X, Y, Z>::initDepthTex()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
-	GLfloat height = 6.9;
+	GLfloat height = 0;
 	glClearTexImage(HeightTex, 0, GL_RED, GL_FLOAT, &height);
 
 	auto err = cudaGraphicsGLRegisterImage(&imageResource, HeightTex, GL_TEXTURE_2D, cudaGraphicsRegisterFlagsSurfaceLoadStore);
@@ -525,19 +542,6 @@ void PipeWater<X, Y, Z>::initDepthTex()
 	//err = cudaMallocArray(&arr, &channelDesc, X, Z, cudaArraySurfaceLoadStore);
 	//if (err != cudaSuccess)
 	//	std::cout << "Error mallocing cuda array: " << err << std::endl;
-	
-
-	if (cudaGraphicsMapResources(1, &imageResource, 0))
-		printf("1ERROR\n");
-	if (cudaGraphicsSubResourceGetMappedArray(&arr, imageResource, 0, 0))
-		printf("2ERROR\n");
-	err = cudaBindSurfaceToArray(surfRef, arr);
-	if (err)
-		printf("3ERROR\n");
-	perturbGrid<X, Y, Z><<<numBlocks, blockSize>>>();
-	err = cudaGraphicsUnmapResources(1, &imageResource, 0);
-	if (err)
-		printf("4ERROR\n");
 }
 
 
