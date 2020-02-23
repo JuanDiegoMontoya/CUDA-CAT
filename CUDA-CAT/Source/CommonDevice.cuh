@@ -1,5 +1,7 @@
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
+#include "vendor/helper_cuda.h"
+#define cudaCheck(err) checkCudaErrors(err, __FILE__, __LINE__)
 
 template<int X, int Y>
 __device__ __host__ glm::ivec3 expand(unsigned index)

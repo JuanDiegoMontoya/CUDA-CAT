@@ -4,14 +4,13 @@
 #include "shader.h"
 #include "camera.h"
 #include "pipeline.h"
-#include "mesh.h"
 #include "utilities.h"
 
-#include "CAMesh.h"
-#include "CommonDevice.cuh"
-#include "cuda_gl_interop.h"
-#include "vendor/helper_cuda.h"
-#include <map>
+#include "CAMesh.h" // voxel mesh
+#include "CommonDevice.cuh" // helpers, cudaCheck
+#include "cuda_gl_interop.h"// gl interoperability
+#include <map> // texture print
+
 
 template class PipeWater<100, 1, 100>;
 template class PipeWater<500, 1, 500>;
@@ -217,22 +216,15 @@ __global__ static void updateVPipes(Pipe* vPGrid, PipeUpdateArgs args)
 template<int X, int Y, int Z>
 PipeWater<X, Y, Z>::PipeWater()
 {
-	auto e1 = cudaMallocManaged(&hPGrid, (X + 1) * (Z) * sizeof(Pipe));
-	auto e3 = cudaMallocManaged(&vPGrid, (X) * (Z + 1) * sizeof(Pipe));
-
-	// will at least tell us something is wrong
-	auto ef = e1 | e3;
-	if (ef != cudaSuccess)
-		std::cout << "Error initializing shared memory!\n";
-
-	//initPlanarMesh();
+	cudaCheck(cudaMallocManaged(&hPGrid, (X + 1) * (Z) * sizeof(Pipe)));
+	cudaCheck(cudaMallocManaged(&vPGrid, (X) * (Z + 1) * sizeof(Pipe)));
 }
 
 
 template<int X, int Y, int Z>
 PipeWater<X, Y, Z>::~PipeWater()
 {
-	cudaGraphicsUnregisterResource(imageResource);
+	cudaCheck(cudaGraphicsUnregisterResource(imageResource));
 }
 
 
@@ -254,23 +246,19 @@ void PipeWater<X, Y, Z>::Init()
 template<int X, int Y, int Z>
 void PipeWater<X, Y, Z>::Update()
 {
-	if (cudaGraphicsMapResources(1, &imageResource, 0))
-		printf("1ERROR\n");
-	if (cudaGraphicsSubResourceGetMappedArray(&arr, imageResource, 0, 0))
-		printf("2ERROR\n");
-	int err = cudaBindSurfaceToArray(surfRef, arr);
-	if (err)
-		printf("3ERROR\n");
+	cudaCheck(cudaGraphicsMapResources(1, &imageResource, 0));
+	cudaCheck(cudaGraphicsSubResourceGetMappedArray(&arr, imageResource, 0, 0));
+	cudaCheck(cudaBindSurfaceToArray(surfRef, arr));
 
+	// update pipes' flow
 	updateHPipes<X, Y, Z><<<hPNumBlocks, PBlockSize>>>(hPGrid, args);
 	updateVPipes<X, Y, Z><<<vPNumBlocks, PBlockSize>>>(vPGrid, args);
 	cudaDeviceSynchronize();
 
+	// update water depth
 	updateGridWater<X, Y, Z><<<numBlocks, blockSize>>>(hPGrid, vPGrid, args.dt);
 	cudaDeviceSynchronize();
-	err = cudaGraphicsUnmapResources(1, &imageResource, 0);
-	if (err)
-		printf("4ERROR\n");
+	cudaCheck(cudaGraphicsUnmapResources(1, &imageResource, 0));
 }
 
 
@@ -310,15 +298,15 @@ void PipeWater<X, Y, Z>::Render()
 		ImGui::Checkbox("Calculate Normals", &calcNormals);
 		if (ImGui::Button("Splash water"))
 		{
-			cudaGraphicsMapResources(1, &imageResource, 0);
-			cudaGraphicsSubResourceGetMappedArray(&arr, imageResource, 0, 0);
-			cudaBindSurfaceToArray(surfRef, arr);
+			cudaCheck(cudaGraphicsMapResources(1, &imageResource, 0));
+			cudaCheck(cudaGraphicsSubResourceGetMappedArray(&arr, imageResource, 0, 0));
+			cudaCheck(cudaBindSurfaceToArray(surfRef, arr));
 			perturbGrid<X, Y, Z><<<numBlocks, blockSize>>>(splash);
 			//for (int i = 0; i < 10; i++)
 			//{
 			//	perturbGrid<X, Y, Z> << <numBlocks, blockSize >> > (splashLoc + glm::ivec2(i * 25, i * 25));
 			//}
-			cudaGraphicsUnmapResources(1, &imageResource, 0);
+			cudaCheck(cudaGraphicsUnmapResources(1, &imageResource, 0));
 		}
 		ImGui::Separator();
 		ImGui::Text("Splash Settings");
@@ -359,6 +347,9 @@ void PipeWater<X, Y, Z>::genMesh()
 template<int X, int Y, int Z>
 void PipeWater<X, Y, Z>::initDepthTex()
 {
+	vertices2d.clear();
+	indices.clear();
+
 	//vertices2d = std::vector<glm::vec2>(X * Z * 2, glm::vec2(0)); // num cells * attributes (pos + normal)
 	vertices2d.reserve(X * Z * 2);
 	indices.reserve((X - 1) * (Z - 1) * 2 * 3); // num cells * num tris per cell * num verts per tri
