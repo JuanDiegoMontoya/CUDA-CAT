@@ -51,15 +51,15 @@ void Level::DrawImGui()
 {
 	{
 		ImGui::Begin("Shaders");
-		if (ImGui::Button("Recompile Postprocess Shader"))
-		{
-			//delete Shader::shaders["postprocess"];
-			Shader::shaders["postprocess"] = new Shader("postprocess.vs", "postprocess.fs");
-		}
 		if (ImGui::Button("Recompile Phong Shader"))
 		{
 			delete Shader::shaders["flatPhong"];
 			Shader::shaders["flatPhong"] = new Shader("flatPhong.vs", "flatPhong.fs");
+		}
+		if (ImGui::Button("Recompile Height Shader"))
+		{
+			delete Shader::shaders["height"];
+			Shader::shaders["height"] = new Shader("height.vs", "height.fs");
 		}
 
 		ImGui::End();

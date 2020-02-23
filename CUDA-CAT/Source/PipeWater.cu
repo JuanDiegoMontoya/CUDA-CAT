@@ -13,14 +13,11 @@
 #include "vendor/helper_cuda.h"
 #include <map>
 
-//template class PipeWater<200, 1, 200>;
-//template class PipeWater<1, 1, 10>;
-//template class PipeWater<10, 1, 1>;
-//template class PipeWater<10, 1, 10>;
 template class PipeWater<100, 1, 100>;
 template class PipeWater<500, 1, 500>;
 template class PipeWater<2000, 1, 2000>;
 
+// texture storing the depth information
 surface<void, 2> surfRef;
 
 /*################################################################
@@ -29,15 +26,15 @@ surface<void, 2> surfRef;
 ##################################################################
 ################################################################*/
 
+
+// prints how many time each unique element of texture appears in it
 void printTex(int x, int y, GLuint texID)
 {
 	int numElements = x * y;
 	float* data = new float[numElements];
 
 	glBindTexture(GL_TEXTURE_2D, texID);
-	{
-		glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_FLOAT, data);
-	}
+	glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_FLOAT, data);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
 	std::map<float, int> unique;
@@ -55,7 +52,7 @@ void printTex(int x, int y, GLuint texID)
 
 // init surface
 template<int X, int Y, int Z>
-__global__ static void perturbGrid(glm::ivec2 pos)
+__global__ static void perturbGrid(SplashArgs args)
 {
 	int index = blockIdx.x * blockDim.x + threadIdx.x;
 	int stride = blockDim.x * gridDim.x;
@@ -66,16 +63,23 @@ __global__ static void perturbGrid(glm::ivec2 pos)
 		glm::ivec2 tp = expand<X>(i);
 
 		float h = 0;
-		//surf2Dread(&h, surfRef, tp.x * sizeof(float), tp.y);
-		h += 100 / glm::distance(glm::vec2(tp.x, tp.y), glm::vec2(pos));
-		//h = glm::distance(glm::vec2(tp.x, tp.y), glm::vec2(0, 0));
-		if (h > 100) h = 100;
-		if (h < 8.5) h = 8.5;
+		//h += 100 / glm::distance(glm::vec2(tp.x, tp.y), glm::vec2(pos));
+		////h = glm::distance(glm::vec2(tp.x, tp.y), glm::vec2(0, 0));
+		//if (h > 100) h = 100;
+		//if (h < 8.5) h = 8.5;
+		surf2Dread(&h, surfRef, tp.x * sizeof(float), tp.y);
+		// DHM
+		// y = Ae^(-bt)
+		float t = glm::distance({ tp.x, tp.y }, args.pos);
+		h += args.A * glm::pow(glm::e<float>(), -args.b * t);
 		//if (h < 5.) continue;
 		surf2Dwrite(h, surfRef, tp.x * sizeof(float), tp.y);
 	}
 }
 
+
+// update the height of each water cell based on its current height and the flow
+// to and from neighboring pipes
 template<int X, int Y, int Z>
 __global__ static void updateGridWater(Pipe* hPGrid, Pipe* vPGrid, float dt)
 {
@@ -92,32 +96,24 @@ __global__ static void updateGridWater(Pipe* hPGrid, Pipe* vPGrid, float dt)
 
 		// d += -dt*(SUM(Q)/(dx)^2)
 		// add to depth flow of adjacent pipes
-		//depth += hPGrid[tp.z][tp.x].flow;
-		//depth -= hPGrid[tp.z][tp.x + 1].flow;
-		//depth += vPGrid[tp.x][tp.z].flow;
-		//depth -= vPGrid[tp.x][tp.z + 1].flow;
 		float sumflow = 0;
 
 		// LEFT TO RIGHT FLOW
 		// tp.y is Z POSITION (vec2 constraint)
 		// add flow from left INTO this cell
 		// (vec2->pipe)
-		//sumflow += hPGrid[flatten<X+1>({ tp.y, tp.x })].flow;
-		// subtract flow TO right cell
-		//sumflow -= hPGrid[flatten<X+1>({ tp.y + 1, tp.x })].flow;
-		//sumflow += vPGrid[flatten<Z+1>({tp.y, tp.x})].flow;
-		//sumflow -= vPGrid[flatten<Z+1>({tp.y, tp.x + 1})].flow;
-		sumflow += hPGrid[flatten<X + 1>({ tp.y, tp.x })].flow;
-		sumflow -= hPGrid[flatten<X + 1>({ tp.y + 1, tp.x })].flow;
-		sumflow += vPGrid[flatten<Z + 1>({ tp.x, tp.y })].flow;
-		sumflow -= vPGrid[flatten<Z + 1>({ tp.x + 1, tp.y })].flow;
+		sumflow += hPGrid[flatten<X + 1>({ tp.y, tp.x })].flow; // flow from left
+		sumflow -= hPGrid[flatten<X + 1>({ tp.y + 1, tp.x })].flow; // flow to right
+		sumflow += vPGrid[flatten<Z + 1>({ tp.x, tp.y })].flow; // flow from below
+		sumflow -= vPGrid[flatten<Z + 1>({ tp.x + 1, tp.y })].flow; // flow to top
 
 		surf2Dwrite(depth + (sumflow * -dt), surfRef, tp.x * sizeof(float), tp.y);
-		//surf2Dwrite(float(blockIdx.x) / 100, surfRef, tp.x * sizeof(float), tp.y);
 	}
 }
 
 
+// traverse the pipes that deliver water horizontally and update them based
+// on height of neighboring water cells to left and right
 template<int X, int Y, int Z>
 __global__ static void updateHPipes(Pipe* hPGrid, PipeUpdateArgs args)
 {
@@ -171,6 +167,8 @@ __global__ static void updateHPipes(Pipe* hPGrid, PipeUpdateArgs args)
 }
 
 
+// traverse the pipes that deliver water vertically and update them based
+// on height of neighboring water cells to top and bottom
 template<int X, int Y, int Z>
 __global__ static void updateVPipes(Pipe* vPGrid, PipeUpdateArgs args)
 {
@@ -193,8 +191,10 @@ __global__ static void updateVPipes(Pipe* vPGrid, PipeUpdateArgs args)
 
 		float downheight;
 		float upheight;
-		surf2Dread(&downheight, surfRef, pipePos.x * sizeof(float), pipePos.y - 1);
-		surf2Dread(&upheight, surfRef, pipePos.x * sizeof(float), pipePos.y);
+		//surf2Dread(&downheight, surfRef, pipePos.x * sizeof(float), pipePos.y - 1);
+		//surf2Dread(&upheight, surfRef, pipePos.x * sizeof(float), pipePos.y);
+		surf2Dread(&downheight, surfRef, (pipePos.y -1) * sizeof(float), pipePos.x );
+		surf2Dread(&upheight, surfRef, pipePos.y * sizeof(float), pipePos.x);
 		float A = 1;
 		float g = 9.8;
 		float dt = .125;
@@ -226,7 +226,6 @@ PipeWater<X, Y, Z>::PipeWater()
 		std::cout << "Error initializing shared memory!\n";
 
 	//initPlanarMesh();
-	initDepthTex();
 }
 
 
@@ -242,40 +241,19 @@ PipeWater<X, Y, Z>::~PipeWater()
 template<int X, int Y, int Z>
 void PipeWater<X, Y, Z>::Init()
 {
-	return;
-	// populate the grid with water
-	for (int z = 0; z < Z; z++)
-	{
-		int zpart = z * X * Y;
-		for (int y = 0; y < Y; y++)
-		{
-			int yzpart = zpart + y * X;
-			for (int x = 0; x < X; x++)
-			{
-				int index = x + yzpart;
+	initDepthTex();
 
-				//this->Grid[index].depth = Utils::get_random(7, 10);
-				this->Grid[index].depth = glm::distance(glm::vec2(x, z), glm::vec2(0, 0)) / 5.0f +
-					cosf(x / 50.f) * 5 + sinf(z / 50.f) * 5 + 10;
-				//this->Grid[index].depth = sinf(z * M_PI / 5) + cosf(x * M_PI / 5) + 2;
-				//this->Grid[index].depth = cosf(z * M_PI / 5) + cosf(x * M_PI / 5) + 2;
-			}
-		}
-	}
-
+	// reset flow of 
 	for (int i = 0; i < (X + 1) * Z; i++)
 		hPGrid[i].flow = 0;
 	for (int i = 0; i < (Z + 1) * X; i++)
 		vPGrid[i].flow = 0;
-
-	this->UpdateMesh = true;
 }
 
 
 template<int X, int Y, int Z>
 void PipeWater<X, Y, Z>::Update()
 {
-
 	if (cudaGraphicsMapResources(1, &imageResource, 0))
 		printf("1ERROR\n");
 	if (cudaGraphicsSubResourceGetMappedArray(&arr, imageResource, 0, 0))
@@ -285,35 +263,20 @@ void PipeWater<X, Y, Z>::Update()
 		printf("3ERROR\n");
 
 	updateHPipes<X, Y, Z><<<hPNumBlocks, PBlockSize>>>(hPGrid, args);
-	//updateHPipesCPU<X, Y, Z>(this->Grid, hPGrid, thPGrid);
 	updateVPipes<X, Y, Z><<<vPNumBlocks, PBlockSize>>>(vPGrid, args);
-	//updateVPipesCPU<X, Y, Z>(this->Grid, vPGrid, tvPGrid);
 	cudaDeviceSynchronize();
 
-
-	//printTex(X, Z, HeightTex);
-
 	updateGridWater<X, Y, Z><<<numBlocks, blockSize>>>(hPGrid, vPGrid, args.dt);
-	//updateGridWaterCPU<X, Y, Z>(this->Grid, this->TGrid, hPGrid, vPGrid);
 	cudaDeviceSynchronize();
 	err = cudaGraphicsUnmapResources(1, &imageResource, 0);
 	if (err)
 		printf("4ERROR\n");
-
-	//printTex(X, Z, HeightTex);
-
-	this->UpdateMesh = true;
 }
 
 
 template<int X, int Y, int Z>
 void PipeWater<X, Y, Z>::Render()
 {
-	//if (this->UpdateMesh)
-	//	updatePlanarMesh(), this->UpdateMesh = false;
-	//if (this->UpdateMesh)
-	//	genMesh(), this->UpdateMesh = false;
-
 	//ShaderPtr sr = Shader::shaders["flatPhong"];
 	ShaderPtr sr = Shader::shaders["height"];
 	sr->Use();
@@ -350,14 +313,18 @@ void PipeWater<X, Y, Z>::Render()
 			cudaGraphicsMapResources(1, &imageResource, 0);
 			cudaGraphicsSubResourceGetMappedArray(&arr, imageResource, 0, 0);
 			cudaBindSurfaceToArray(surfRef, arr);
-			perturbGrid<X, Y, Z> << <numBlocks, blockSize >> > (splashLoc);
+			perturbGrid<X, Y, Z><<<numBlocks, blockSize>>>(splash);
 			//for (int i = 0; i < 10; i++)
 			//{
 			//	perturbGrid<X, Y, Z> << <numBlocks, blockSize >> > (splashLoc + glm::ivec2(i * 25, i * 25));
 			//}
 			cudaGraphicsUnmapResources(1, &imageResource, 0);
 		}
-		ImGui::InputInt2("Splash location", &splashLoc[0]);
+		ImGui::Separator();
+		ImGui::Text("Splash Settings");
+		ImGui::InputFloat2("Location", &splash.pos[0]);
+		ImGui::InputFloat("Amplitude", &splash.A);
+		ImGui::InputFloat("Falloff", &splash.b);
 		//float sum = 0;
 		//for (int i = 0; i < X * Y * Z; i++)
 		//	sum += this->Grid[i].depth;
@@ -390,93 +357,6 @@ void PipeWater<X, Y, Z>::genMesh()
 
 
 template<int X, int Y, int Z>
-void PipeWater<X, Y, Z>::initPlanarMesh()
-{
-	vertices = std::vector<glm::vec3>(X * Z * 2, glm::vec3(0)); // num cells * attributes (pos + normal)
-	indices.reserve((X-1) * (Z-1) * 2 * 3); // num cells * num tris per cell * num verts per tri
-
-	// init indices
-	for (int x = 0; x < X - 1; x++)
-	{
-		// for each cell
-		for (int z = 0; z < Z - 1; z++)
-		{
-			GLuint one = flatten<X>(glm::ivec2(x, z));
-			GLuint two = flatten<X>(glm::ivec2(x + 1, z));
-			GLuint three = flatten<X>(glm::ivec2(x + 1, z + 1));
-			GLuint four = flatten<X>(glm::ivec2(x, z + 1));
-
-			indices.push_back(one);
-			indices.push_back(two);
-			indices.push_back(three);
-			
-			indices.push_back(one);
-			indices.push_back(three);
-			indices.push_back(four);
-		}
-	}
-
-	pVbo = new VBO(&vertices[0][0], vertices.size() * sizeof(glm::vec3), GL_DYNAMIC_DRAW);
-	VBOlayout layout;
-	layout.Push<float>(3);
-	layout.Push<float>(3);
-	pVao = new VAO();
-	pVao->AddBuffer(*pVbo, layout);
-	pIbo = new IBO(indices.data(), indices.size());
-	pVao->Unbind();
-}
-
-
-template<int X, int Y, int Z>
-void PipeWater<X, Y, Z>::updatePlanarMesh()
-{
-	vertices.clear();
-	//for (int i = 0; i < X * Z; i++)
-	//{
-	//	auto xz = expand<X>(i);
-	//	auto xzUp = xz; xzUp.y++;
-	//	auto xzRight = xz; xzRight.x++;
-	//	glm::vec3 up = { xzUp.x, this->Grid[flatten<X>(xzUp)].depth, xzUp.y };
-	//	glm::vec3 right = { xzRight.x, this->Grid[flatten<X>(xzRight)].depth, xzRight.y };
-	//	glm::vec3 d = { xz.x, this->Grid[i].depth, xz.y };
-	//	vertices.push_back(d);
-	//	//vertices.push_back(glm::normalize(glm::cross(xz.y < Z ? up - d : d - up, xz.x < X ? right - d : d - right)));
-	//	// TODO: fix normals
-	//	vertices.push_back(glm::cross(up - d, right - d));
-	//	//vertices.push_back({ 0, 1, 0 });
-	//}
-
-	for (int x = 0; x < X; x++)
-	{
-		for (int z = 0; z < Z; z++)
-		{
-			int ind = flatten<X>({ x, z });
-			int indup = flatten<X>({ x, z + 1 });
-			int indright = flatten<X>({ x + 1, z });
-			if (indup > X * Z) indup = ind;
-			if (indright > X * Z) indright = ind;
-			glm::vec3 cur = { x, Grid[ind].depth, z };
-			glm::vec3 right = { x + 1, Grid[indright].depth, z };
-			glm::vec3 up = { x, Grid[indup].depth, z + 1};
-
-			vertices.push_back(cur);
-			if (calcNormals)
-				vertices.push_back(glm::cross(up - cur, right - cur));
-			else
-				vertices.push_back({ 0, 1, 0 });
-		}
-	}
-
-	pVbo->Bind();
-	glBufferSubData(GL_ARRAY_BUFFER,
-		NULL,
-		vertices.size() * sizeof(glm::vec3),
-		vertices.data());
-	pVbo->Unbind();
-}
-
-
-template<int X, int Y, int Z>
 void PipeWater<X, Y, Z>::initDepthTex()
 {
 	//vertices2d = std::vector<glm::vec2>(X * Z * 2, glm::vec2(0)); // num cells * attributes (pos + normal)
@@ -487,8 +367,11 @@ void PipeWater<X, Y, Z>::initDepthTex()
 	{
 		for (int z = 0; z < Z; z++)
 		{
-			vertices2d.push_back({ (float)x, float(z) }); // pos xz
-			vertices2d.push_back({ float(x) / float(X), float(z) / float(Z) }); // texcoord
+			glm::dvec2 p(x, z);
+			glm::dvec2 P(X, Z);
+			vertices2d.push_back(p); // pos xz
+			//vertices2d.push_back({ float(x) / float(X), float(z) / float(Z) }); // texcoord
+			vertices2d.push_back(p / P); // texcoord
 		}
 	}
 
@@ -538,118 +421,4 @@ void PipeWater<X, Y, Z>::initDepthTex()
 	auto err = cudaGraphicsGLRegisterImage(&imageResource, HeightTex, GL_TEXTURE_2D, cudaGraphicsRegisterFlagsSurfaceLoadStore);
 	if (err != cudaSuccess)
 		std::cout << "Error registering CUDA image: " << err << std::endl;
-
-	// not sure if these 2 lines are necessary
-	//cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<float>();
-	//err = cudaMallocArray(&arr, &channelDesc, X, Z, cudaArraySurfaceLoadStore);
-	//if (err != cudaSuccess)
-	//	std::cout << "Error mallocing cuda array: " << err << std::endl;
 }
-
-
-template<int X, int Y, int Z>
-void PipeWater<X, Y, Z>::updateDepthTex()
-{
-}
-
-
-/*################################################################
-##################################################################
-               CPU SIMULATION CODE FOR DEBUGGING
-##################################################################
-################################################################*/
-
-
-template<int X, int Y, int Z>
-static void updateHPipesCPU(WaterCell* grid, Pipe* hPGrid, Pipe* thPGrid)
-{
-	int n = (X + 1) * (Z);
-
-	for (int i = 0; i < n; i++)
-	{
-		float flow = hPGrid[i].flow;
-
-		glm::ivec2 pipePos = expand<X + 1>(i);
-		std::swap(pipePos.x, pipePos.y); // confusion
-
-		//ASSERT(pipePos.x < 10);
-		if (pipePos.x == 0 || pipePos.x == X)
-		{
-			thPGrid[i].flow = 0;
-			continue;
-		}
-
-		float leftHeight = grid[flatten<X>(pipePos - glm::ivec2(1, 0))].depth;
-		float rightHeight = grid[flatten<X>(pipePos)].depth;
-
-		float A = 1;
-		float g = 9.8;
-		float dt = .125;
-		float dx = 1; // CONSTANT (length of pipe)
-		float dh = rightHeight - leftHeight; // diff left->right
-
-		// flow from left to right
-		thPGrid[i].flow = A * (g / dx) * dh * dt;
-	}
-}
-
-
-template<int X, int Y, int Z>
-static void updateVPipesCPU(WaterCell* grid, Pipe* vPGrid, Pipe* tvPGrid)
-{
-	int n = (X) * (Z + 1);
-
-	for (int i = 0; i < n; i++)
-	{
-		float flow = vPGrid[i].flow;
-
-		glm::ivec2 pipePos = expand<Z + 1>(i);
-		//std::swap(pipePos.x, pipePos.y); // confusion
-
-		if (pipePos.y == 0 || pipePos.y == Z)
-		{
-			tvPGrid[i].flow = 0;
-			continue;
-		}
-
-		float downheight = grid[flatten<Z>(pipePos - glm::ivec2(0, 1))].depth;
-		float upheight = grid[flatten<Z>(pipePos)].depth;
-		float A = 1;
-		float g = 9.8;
-		float dt = .125;
-		float dx = 1;
-		float dh = upheight - downheight;
-
-		tvPGrid[i].flow = A * (g / dx) * dh * dt;
-	}
-}
-
-
-template<int X, int Y, int Z>
-static void updateGridWaterCPU(WaterCell* grid, WaterCell* tempGrid, Pipe* hPGrid, Pipe* vPGrid)
-{
-	int n = X * Y * Z;
-
-	for (int i = 0; i < n; i++)
-	{
-		float depth = grid[i].depth;
-
-		glm::ivec2 tp = expand<X>(i);
-		float sumflow = 0;
-
-		sumflow += hPGrid[flatten<X + 1>({ tp.y, tp.x })].flow;
-		sumflow -= hPGrid[flatten<X + 1>({ tp.y + 1, tp.x })].flow;
-		sumflow += vPGrid[flatten<Z + 1>({ tp.x, tp.y })].flow;
-		sumflow -= vPGrid[flatten<Z + 1>({ tp.x + 1, tp.y })].flow;
-
-		float dt = .125;
-		tempGrid[i].depth = depth + sumflow * -dt;
-	}
-}
-
-
-/*################################################################
-##################################################################
-					           END CPU SIMULATION CODE
-##################################################################
-################################################################*/

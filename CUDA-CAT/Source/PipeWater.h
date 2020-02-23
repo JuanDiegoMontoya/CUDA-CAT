@@ -19,6 +19,13 @@ struct PipeUpdateArgs
 	float dt = .125;
 };
 
+struct SplashArgs
+{
+	glm::vec2 pos = glm::vec2(40, 80);
+	float A = 30; // amplitude
+	float b = .1; // falloff rate
+};
+
 template<int X, int Y, int Z>
 class PipeWater : public CellularAutomata<WaterCell, X, Y, Z>
 {
@@ -32,10 +39,6 @@ public:
 private:
 	virtual void genMesh() override;
 
-	// alternative to generating a mesh from scratch every update,
-	// just update what is already there with much less CPU overhead
-	void initPlanarMesh();
-	void updatePlanarMesh();
 	std::vector<glm::vec3> vertices; // order doesn't change
 	std::vector<glm::vec2> vertices2d; // order doesn't change
 	std::vector<GLuint> indices; // immutable basically
@@ -45,7 +48,6 @@ private:
 
 	// use 
 	void initDepthTex();
-	void updateDepthTex();
 	GLuint HeightTex;
 	struct cudaGraphicsResource* imageResource;
 	struct cudaArray* arr;
@@ -59,4 +61,6 @@ private:
 	PipeUpdateArgs args;
 	bool calcNormals = true;
 	glm::ivec2 splashLoc;
+
+	SplashArgs splash;
 };

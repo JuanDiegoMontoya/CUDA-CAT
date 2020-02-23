@@ -18,8 +18,8 @@ void main()
 	vTexCoord = aTexCoord;
 	vec2 dim = textureSize(heightTex, 0);
 	float height = texture(heightTex, aTexCoord).r;
-	float uHeight = texture(heightTex, vec2(aTexCoord.x, aTexCoord.y + 1 / dim.y)).r;
-	float rHeight = texture(heightTex, vec2(aTexCoord.x + 1 / dim.x, aTexCoord.y)).r;
+	float uHeight = texture(heightTex, vec2(aTexCoord.x, aTexCoord.y + 1.0 / dim.y)).r;
+	float rHeight = texture(heightTex, vec2(aTexCoord.x + 1.0 / dim.x, aTexCoord.y)).r;
 	vec3 aPos = vec3(aPosXZ.x, height, aPosXZ.y);
 	//if (aTexCoord.y > .5)
 	//	aPos.y = 100;
