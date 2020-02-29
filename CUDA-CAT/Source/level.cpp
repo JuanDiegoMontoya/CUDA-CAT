@@ -61,6 +61,11 @@ void Level::DrawImGui()
 			delete Shader::shaders["height"];
 			Shader::shaders["height"] = new Shader("height.vs", "height.fs");
 		}
+		if (ImGui::Button("Recompile HeightWater Shader"))
+		{
+			delete Shader::shaders["heightWater"];
+			Shader::shaders["heightWater"] = new Shader("height.vs", "heightWater.fs");
+		}
 
 		ImGui::End();
 	}

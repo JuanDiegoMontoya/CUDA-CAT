@@ -113,6 +113,7 @@ float FresnelSchlick(vec3 i, vec3 n, float Eta, float Power);
 vec3 NotRefract(in vec3 I, in vec3 N, float eta);
 vec3 NotReflect(in vec3 I, in vec3 N);
 
+
 void main()
 {
   if (GPUTexCoords == true)

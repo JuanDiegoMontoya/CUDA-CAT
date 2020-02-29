@@ -266,21 +266,23 @@ template<int X, int Y, int Z>
 void PipeWater<X, Y, Z>::Render()
 {
 	//ShaderPtr sr = Shader::shaders["flatPhong"];
-	ShaderPtr sr = Shader::shaders["height"];
+	ShaderPtr sr = Shader::shaders["heightWater"];
 	sr->Use();
 	glm::mat4 model(1);
 	model = glm::translate(model, glm::vec3(150, 40, 80));
-	model = glm::scale(model, glm::vec3(.1, .1, .1));
+	model = glm::scale(model, glm::vec3(.01, .01, .01));
 	sr->setMat4("u_proj", Render::GetCamera()->GetProj());
 	sr->setMat4("u_view", Render::GetCamera()->GetView());
 	sr->setMat4("u_model", model);
-	sr->setVec3("u_color", { .2, .7, .9 });
+	//sr->setVec3("u_color", { .2, .7, .9 });
 	sr->setVec3("u_viewpos", Render::GetCamera()->GetPos());
+	sr->setVec3("sun.ambient", { .1, .1, .1 });
+	sr->setVec3("sun.diffuse", { .8, .8, .8 });
+	sr->setVec3("sun.specular", { .8, .8, .8 });
+	sr->setVec3("sun.direction", { 0, -1, 0 });
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, HeightTex);
 	sr->setInt("heightTex", 0);
-
-	//this->mesh_->Draw();
 	glDisable(GL_CULL_FACE);
 	pVao->Bind();
 	glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, nullptr);
@@ -400,8 +402,8 @@ void PipeWater<X, Y, Z>::initDepthTex()
 	glGenTextures(1, &HeightTex);
 	glBindTexture(GL_TEXTURE_2D, HeightTex);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, X, Z, 0, GL_RED, GL_FLOAT, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 	glBindTexture(GL_TEXTURE_2D, 0);

@@ -19,6 +19,7 @@ Renderer::Renderer() {}
 // initializes the gBuffer and its attached textures
 void Renderer::Init()
 {
+	initCubeMap();
 	automaton->Init();
 	//for (int i = 0; i < 500; i++)
 	//	automaton->Update();
@@ -32,6 +33,20 @@ void Renderer::DrawAll()
 {
   PERF_BENCHMARK_START;
 	glEnable(GL_FRAMEBUFFER_SRGB); // gamma correction
+
+	glDepthMask(GL_FALSE);
+	ShaderPtr sr = Shader::shaders["skybox"];
+	sr->Use();
+	sr->setInt("skybox", 1);
+	sr->setMat4("proj", Render::GetCamera()->GetProj());
+	glm::mat4 view = Render::GetCamera()->GetView();
+	view = glm::mat4(glm::mat3(view));
+	sr->setMat4("view", view);
+	cubeVao->Bind();
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, cubeTex);
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+	glDepthMask(GL_TRUE);
 
 	//for (auto& obj : objects)
 	//	obj->Update();
@@ -133,4 +148,50 @@ void Renderer::drawQuad()
 	glBindVertexArray(quadVAO);
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 	glBindVertexArray(0);
+}
+
+
+#include <stb_image.h>
+void Renderer::initCubeMap()
+{
+	glGenTextures(1, &cubeTex);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, cubeTex);
+
+	cubeVao = new VAO();
+	cubeVbo = new VBO(Render::skyboxVertices, sizeof(Render::skyboxVertices));
+	VBOlayout layout;
+	layout.Push<float>(3);
+	cubeVao->AddBuffer(*cubeVbo, layout);
+
+	std::vector<std::string> faces =
+	{
+		"./resources/Textures/skybox/right.jpg",
+		"./resources/Textures/skybox/left.jpg",
+		"./resources/Textures/skybox/top.jpg",
+		"./resources/Textures/skybox/bottom.jpg",
+		"./resources/Textures/skybox/front.jpg",
+		"./resources/Textures/skybox/back.jpg"
+	};
+	int width, height, nrChannels;
+	for (unsigned int i = 0; i < faces.size(); i++)
+	{
+		unsigned char* data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
+		if (data)
+		{
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+				0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data
+			);
+			stbi_image_free(data);
+		}
+		else
+		{
+			std::cout << "Cubemap tex failed to load at path: " << faces[i] << std::endl;
+			stbi_image_free(data);
+		}
+	}
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 }
