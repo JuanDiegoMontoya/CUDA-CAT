@@ -19,7 +19,7 @@ int main()
 	set_glfw_callbacks(window);
 
 	// 1 = vsync; 0 = fast fps
-	glfwSwapInterval(1);
+	glfwSwapInterval(0);
 
 	Render::Init();
 
