@@ -49,7 +49,7 @@ void printTex(int x, int y, GLuint texID)
 }
 
 
-// init surface
+// makes a splash
 template<int X, int Y, int Z>
 __global__ static void perturbGrid(SplashArgs args)
 {
@@ -62,17 +62,71 @@ __global__ static void perturbGrid(SplashArgs args)
 		glm::ivec2 tp = expand<X>(i);
 
 		float h = 0;
-		//h += 100 / glm::distance(glm::vec2(tp.x, tp.y), glm::vec2(pos));
-		////h = glm::distance(glm::vec2(tp.x, tp.y), glm::vec2(0, 0));
-		//if (h > 100) h = 100;
-		//if (h < 8.5) h = 8.5;
 		surf2Dread(&h, surfRef, tp.x * sizeof(float), tp.y);
 		// DHM
 		// y = Ae^(-bt)
 		float t = glm::distance({ tp.x, tp.y }, args.pos);
 		h += args.A * glm::pow(glm::e<float>(), -args.b * t);
-		//if (h < 5.) continue;
 		surf2Dwrite(h, surfRef, tp.x * sizeof(float), tp.y);
+	}
+}
+
+
+// throttles pipes that would cause an update to lower water depth below 0
+// TODO: this function is broken and not super necessary
+template<int X, int Y, int Z>
+__global__ static void clampGridPipes(Pipe* hPGrid, Pipe* vPGrid, float dt)
+{
+	int index = blockIdx.x * blockDim.x + threadIdx.x;
+	int stride = blockDim.x * gridDim.x;
+	int n = X * Y * Z;
+
+	for (int i = index; i < n; i += stride)
+	{
+		glm::ivec2 tp = expand<X>(i);
+		float depth;
+		surf2Dread(&depth, surfRef, tp.x * sizeof(float), tp.y);
+
+		float sumflow = 0;
+
+		float flows[4];
+		flows[0] = hPGrid[flatten<X + 1>({ tp.y, tp.x })].flow; // flow from left +
+		flows[1] = hPGrid[flatten<X + 1>({ tp.y + 1, tp.x })].flow; // flow to right -
+		flows[2] = vPGrid[flatten<Z + 1>({ tp.x, tp.y })].flow; // flow from below +
+		flows[3] = vPGrid[flatten<Z + 1>({ tp.x + 1, tp.y })].flow; // flow to top -
+
+		sumflow += flows[0];
+		sumflow -= flows[1];
+		sumflow += flows[2];
+		sumflow -= flows[3];
+		float finalDepth = depth + (sumflow * -dt);
+
+		if (finalDepth < 0)
+		{
+			float scalar = depth / (sumflow * -dt);
+			if (fabs(scalar) > 1)
+			{
+				//printf("meme: %.3f\n", scalar);
+				//continue;
+			}
+			if (flows[0] < 0)
+			{
+				//printf("divisor: %.3f flow0: %.3f\n", divisor);
+				hPGrid[flatten<X + 1>({ tp.y, tp.x })].flow = flows[0] * scalar;
+			}
+			if (flows[1] > 0)
+			{
+				hPGrid[flatten<X + 1>({ tp.y + 1, tp.x })].flow = flows[1] * scalar;
+			}
+			if (flows[2] < 0)
+			{
+				vPGrid[flatten<Z + 1>({ tp.x, tp.y })].flow = flows[2] * scalar;
+			}
+			if (flows[3] > 0)
+			{
+				vPGrid[flatten<Z + 1>({ tp.x + 1, tp.y })].flow = flows[3] * scalar;
+			}
+		}
 	}
 }
 
@@ -218,6 +272,8 @@ PipeWater<X, Y, Z>::PipeWater()
 {
 	cudaCheck(cudaMallocManaged(&hPGrid, (X + 1) * (Z) * sizeof(Pipe)));
 	cudaCheck(cudaMallocManaged(&vPGrid, (X) * (Z + 1) * sizeof(Pipe)));
+	cudaCheck(cudaMallocManaged(&temphPGrid, (X + 1) * (Z) * sizeof(Pipe)));
+	cudaCheck(cudaMallocManaged(&tempvPGrid, (X) * (Z + 1) * sizeof(Pipe)));
 }
 
 
@@ -254,6 +310,9 @@ void PipeWater<X, Y, Z>::Update()
 	updateHPipes<X, Y, Z><<<hPNumBlocks, PBlockSize>>>(hPGrid, args);
 	updateVPipes<X, Y, Z><<<vPNumBlocks, PBlockSize>>>(vPGrid, args);
 	cudaDeviceSynchronize();
+
+	//clampGridPipes<X, Y, Z><<<numBlocks, blockSize>>>(hPGrid, vPGrid, args.dt);
+	//cudaDeviceSynchronize();
 
 	// update water depth
 	updateGridWater<X, Y, Z><<<numBlocks, blockSize>>>(hPGrid, vPGrid, args.dt);

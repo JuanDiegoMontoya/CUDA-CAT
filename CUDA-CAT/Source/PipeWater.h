@@ -57,6 +57,8 @@ private:
 	const int vPNumBlocks = (X * (Z+1) + PBlockSize - 1) / PBlockSize;
 	Pipe* hPGrid = nullptr; // horizontal (x axis)
 	Pipe* vPGrid = nullptr; // vertical (z axis)
+	Pipe* temphPGrid = nullptr; // temp
+	Pipe* tempvPGrid = nullptr; // temp
 
 	PipeUpdateArgs args;
 	bool calcNormals = true;
