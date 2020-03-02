@@ -3,8 +3,9 @@
 
 #include "shader.h"
 #include "camera.h"
-#include "pipeline.h"
+#include "Pipeline.h"
 #include "utilities.h"
+#include "Renderer.h"
 
 #include "CAMesh.h" // voxel mesh
 #include "CommonDevice.cuh" // helpers, cudaCheck
@@ -280,7 +281,7 @@ PipeWater<X, Y, Z>::PipeWater()
 template<int X, int Y, int Z>
 PipeWater<X, Y, Z>::~PipeWater()
 {
-	cudaCheck(cudaGraphicsUnregisterResource(imageResource));
+	//cudaCheck(cudaGraphicsUnregisterResource(imageResource));
 }
 
 
@@ -330,11 +331,11 @@ void PipeWater<X, Y, Z>::Render()
 	glm::mat4 model(1);
 	model = glm::translate(model, glm::vec3(150, 40, 80));
 	model = glm::scale(model, glm::vec3(.01, .01, .01));
-	sr->setMat4("u_proj", Render::GetCamera()->GetProj());
-	sr->setMat4("u_view", Render::GetCamera()->GetView());
+	sr->setMat4("u_proj", Renderer::GetPipeline()->GetCamera(0)->GetProj());
+	sr->setMat4("u_view", Renderer::GetPipeline()->GetCamera(0)->GetView());
 	sr->setMat4("u_model", model);
 	//sr->setVec3("u_color", { .2, .7, .9 });
-	sr->setVec3("u_viewpos", Render::GetCamera()->GetPos());
+	sr->setVec3("u_viewpos", Renderer::GetPipeline()->GetCamera(0)->GetPos());
 	sr->setVec3("sun.ambient", { .1, .1, .1 });
 	sr->setVec3("sun.diffuse", { .8, .8, .8 });
 	sr->setVec3("sun.specular", { .8, .8, .8 });

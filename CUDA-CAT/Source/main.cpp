@@ -2,8 +2,8 @@
 
 #include "sys_window.h"
 #include "input.h"
-#include "pipeline.h"
-#include "game.h"
+#include "Pipeline.h"
+#include "Engine.h"
 #include "imgui_impl.h"
 
 GLFWwindow* win = nullptr;
@@ -21,10 +21,8 @@ int main()
 	// 1 = vsync; 0 = fast fps
 	glfwSwapInterval(1);
 
-	Render::Init();
-
-	Game game(window);
-	game.Run();
+	Engine::Init(window);
+	Engine::Run();
 
 	ImGui_Impl::Cleanup();
 	glfwTerminate();

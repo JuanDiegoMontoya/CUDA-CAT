@@ -3,7 +3,8 @@
 
 #include "shader.h"
 #include "camera.h"
-#include "pipeline.h"
+#include "Pipeline.h"
+#include "Renderer.h"
 #include "mesh.h"
 #include "utilities.h"
 
@@ -112,11 +113,11 @@ void CaveGen<X, Y, Z>::Render()
 
 	ShaderPtr sr = Shader::shaders["flatPhong"];
 	sr->Use();
-	sr->setMat4("u_proj", Render::GetCamera()->GetProj());
-	sr->setMat4("u_view", Render::GetCamera()->GetView());
+	sr->setMat4("u_proj", Renderer::GetPipeline()->GetCamera(0)->GetProj());
+	sr->setMat4("u_view", Renderer::GetPipeline()->GetCamera(0)->GetView());
 	sr->setMat4("u_model", glm::mat4(1));
 	sr->setVec3("u_color", { .9, .4, .4 });
-	sr->setVec3("u_viewpos", Render::GetCamera()->GetPos());
+	sr->setVec3("u_viewpos", Renderer::GetPipeline()->GetCamera(0)->GetPos());
 
 	this->mesh_->Draw();
 

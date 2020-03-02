@@ -1,5 +1,6 @@
 #pragma once
 #include "mesh.h"
+#include "Vertices.h"
 
 #define FLATTEN(x, y, z) (x + y * X + z * X * Y)
 #define FLATTENV(p) (FLATTEN(p.x, p.y, p.z))
@@ -21,10 +22,10 @@ inline void AddQuad(glm::ivec3 pos, int face,
 	// add adjusted indices of the quad we're about to add
 	int endIndices = (face + 1) * 6;
 	for (int i = face * 6; i < endIndices; i++)
-		indices.push_back(Render::cube_indices_light_cw[i] + vertices.size());
+		indices.push_back(Vertices::cube_indices_light_cw[i] + vertices.size());
 
 	// add vertices for the quad
-	const GLfloat* data = Render::cube_vertices_light;
+	const GLfloat* data = Vertices::cube_vertices_light;
 	int endQuad = (face + 1) * 12;
 	for (int i = face * 12; i < endQuad; i += 3)
 	{
