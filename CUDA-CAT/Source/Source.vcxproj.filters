@@ -33,9 +33,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="engine_assert.h">
-      <Filter>Debug</Filter>
-    </ClInclude>
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="vendor\imgui\imconfig.h">
       <Filter>vendor</Filter>
@@ -158,11 +155,11 @@
     <ClInclude Include="Engine\Source\Engine.h">
       <Filter>System</Filter>
     </ClInclude>
+    <ClInclude Include="Engine\Source\engine_assert.h">
+      <Filter>System</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="engine_assert.cpp">
-      <Filter>Debug</Filter>
-    </ClCompile>
     <ClCompile Include="vendor\imgui\imgui.cpp">
       <Filter>vendor</Filter>
     </ClCompile>
@@ -234,6 +231,9 @@
       <Filter>Graphics</Filter>
     </ClCompile>
     <ClCompile Include="Engine\Source\Engine.cpp">
+      <Filter>System</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Source\engine_assert.cpp">
       <Filter>System</Filter>
     </ClCompile>
   </ItemGroup>
