@@ -79,18 +79,18 @@ namespace Interface
 		{
 			ImGui::Begin("Simulation");
 			ImGui::Text("Game of Life");
-			if (ImGui::RadioButton("2D##gol", Renderer::GetAutomatonIndex() == 0))
-				Renderer::SetAutomatonIndex(0);
-			ImGui::SameLine();
-			if (ImGui::RadioButton("3D##gol", Renderer::GetAutomatonIndex() == 1))
+			if (ImGui::RadioButton("2D##gol", Renderer::GetAutomatonIndex() == 1))
 				Renderer::SetAutomatonIndex(1);
+			ImGui::SameLine();
+			if (ImGui::RadioButton("3D##gol", Renderer::GetAutomatonIndex() == 0))
+				Renderer::SetAutomatonIndex(0);
 
 			ImGui::Text("Cave Generator");
 			if (ImGui::RadioButton("2D##cave", Renderer::GetAutomatonIndex() == 2))
 				Renderer::SetAutomatonIndex(2);
 			ImGui::SameLine();
 			if (ImGui::RadioButton("3D##cave", Renderer::GetAutomatonIndex() == 3))
-				Renderer::SetAutomatonIndex(2);
+				Renderer::SetAutomatonIndex(3);
 
 			ImGui::Text("Water");
 			if (ImGui::RadioButton("Small##water", Renderer::GetAutomatonIndex() == 4))
@@ -100,7 +100,7 @@ namespace Interface
 				Renderer::SetAutomatonIndex(5);
 
 			ImGui::Checkbox("Pause Simulation", &Engine::GetPauseRef());
-			//ImGui::SliderFloat("s/Update", &renderer_.updateFrequency, 0, 1, "%.2f");
+			ImGui::SliderFloat("s/Update", &Renderer::GetUpdateFrequencyRef(), 0, .3f, "%.2f");
 			if (ImGui::Button("Re-init Sim"))
 				Renderer::GetAutomaton()->Init();
 			if (ImGui::Button("1x Update Simulation"))

@@ -31,6 +31,9 @@
     <Filter Include="CA">
       <UniqueIdentifier>{f0ab440e-1854-4d07-ab52-7bb4cfd0e63b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Engine">
+      <UniqueIdentifier>{0931c59b-43af-4a25-af2b-202a2f78a906}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h" />
@@ -95,54 +98,6 @@
     <ClInclude Include="vendor\helper_string.h">
       <Filter>vendor</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\Source\camera.h">
-      <Filter>System</Filter>
-    </ClInclude>
-    <ClInclude Include="Engine\Source\debug.h">
-      <Filter>System</Filter>
-    </ClInclude>
-    <ClInclude Include="Engine\Source\ibo.h">
-      <Filter>System</Filter>
-    </ClInclude>
-    <ClInclude Include="Engine\Source\imgui_impl.h">
-      <Filter>System</Filter>
-    </ClInclude>
-    <ClInclude Include="Engine\Source\input.h">
-      <Filter>System</Filter>
-    </ClInclude>
-    <ClInclude Include="Engine\Source\math_utils.h">
-      <Filter>System</Filter>
-    </ClInclude>
-    <ClInclude Include="Engine\Source\mesh.h">
-      <Filter>System</Filter>
-    </ClInclude>
-    <ClInclude Include="Engine\Source\misc_utils.h">
-      <Filter>System</Filter>
-    </ClInclude>
-    <ClInclude Include="Engine\Source\shader.h">
-      <Filter>System</Filter>
-    </ClInclude>
-    <ClInclude Include="Engine\Source\sys_window.h">
-      <Filter>System</Filter>
-    </ClInclude>
-    <ClInclude Include="Engine\Source\texture.h">
-      <Filter>System</Filter>
-    </ClInclude>
-    <ClInclude Include="Engine\Source\utilities.h">
-      <Filter>System</Filter>
-    </ClInclude>
-    <ClInclude Include="Engine\Source\vao.h">
-      <Filter>System</Filter>
-    </ClInclude>
-    <ClInclude Include="Engine\Source\vbo.h">
-      <Filter>System</Filter>
-    </ClInclude>
-    <ClInclude Include="Engine\Source\vbo_layout.h">
-      <Filter>System</Filter>
-    </ClInclude>
-    <ClInclude Include="Engine\Source\load_image.h">
-      <Filter>System</Filter>
-    </ClInclude>
     <ClInclude Include="Interface.h">
       <Filter>Game</Filter>
     </ClInclude>
@@ -152,11 +107,59 @@
     <ClInclude Include="Renderer.h">
       <Filter>Graphics</Filter>
     </ClInclude>
+    <ClInclude Include="Engine\Source\camera.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Source\debug.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
     <ClInclude Include="Engine\Source\Engine.h">
-      <Filter>System</Filter>
+      <Filter>Engine</Filter>
     </ClInclude>
     <ClInclude Include="Engine\Source\engine_assert.h">
-      <Filter>System</Filter>
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Source\ibo.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Source\imgui_impl.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Source\input.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Source\load_image.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Source\math_utils.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Source\mesh.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Source\misc_utils.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Source\shader.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Source\sys_window.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Source\texture.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Source\utilities.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Source\vao.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Source\vbo.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Source\vbo_layout.h">
+      <Filter>Engine</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -182,58 +185,58 @@
     <ClCompile Include="CellularAutomata.cpp">
       <Filter>CA</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\Source\camera.cpp">
-      <Filter>System</Filter>
-    </ClCompile>
-    <ClCompile Include="Engine\Source\debug.cpp">
-      <Filter>System</Filter>
-    </ClCompile>
-    <ClCompile Include="Engine\Source\ibo.cpp">
-      <Filter>System</Filter>
-    </ClCompile>
-    <ClCompile Include="Engine\Source\imgui_impl.cpp">
-      <Filter>System</Filter>
-    </ClCompile>
-    <ClCompile Include="Engine\Source\input.cpp">
-      <Filter>System</Filter>
-    </ClCompile>
-    <ClCompile Include="Engine\Source\math_utils.cpp">
-      <Filter>System</Filter>
-    </ClCompile>
-    <ClCompile Include="Engine\Source\mesh.cpp">
-      <Filter>System</Filter>
-    </ClCompile>
-    <ClCompile Include="Engine\Source\shader.cpp">
-      <Filter>System</Filter>
-    </ClCompile>
-    <ClCompile Include="Engine\Source\sys_window.cpp">
-      <Filter>System</Filter>
-    </ClCompile>
-    <ClCompile Include="Engine\Source\texture.cpp">
-      <Filter>System</Filter>
-    </ClCompile>
-    <ClCompile Include="Engine\Source\vao.cpp">
-      <Filter>System</Filter>
-    </ClCompile>
-    <ClCompile Include="Engine\Source\vbo.cpp">
-      <Filter>System</Filter>
-    </ClCompile>
-    <ClCompile Include="Engine\Source\load_image.cpp">
-      <Filter>System</Filter>
-    </ClCompile>
-    <ClCompile Include="main.cpp">
-      <Filter>System</Filter>
-    </ClCompile>
     <ClCompile Include="Interface.cpp">
       <Filter>Game</Filter>
     </ClCompile>
     <ClCompile Include="Renderer.cpp">
       <Filter>Graphics</Filter>
     </ClCompile>
+    <ClCompile Include="Engine\Source\camera.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Source\debug.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
     <ClCompile Include="Engine\Source\Engine.cpp">
-      <Filter>System</Filter>
+      <Filter>Engine</Filter>
     </ClCompile>
     <ClCompile Include="Engine\Source\engine_assert.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Source\ibo.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Source\imgui_impl.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Source\input.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Source\load_image.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Source\math_utils.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Source\mesh.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Source\shader.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Source\sys_window.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Source\texture.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Source\vao.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Source\vbo.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
       <Filter>System</Filter>
     </ClCompile>
   </ItemGroup>

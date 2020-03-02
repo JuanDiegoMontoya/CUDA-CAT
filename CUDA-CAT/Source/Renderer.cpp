@@ -31,7 +31,7 @@ namespace Renderer
 
 		// CA
 		bool pauseSimulation = false;
-		float updateFrequency = .02f; // seconds
+		float updateFrequency = .01f; // seconds
 		float timeCount = 0;
 		GameOfLife<50, 50, 50> GoL;
 		GameOfLife<200, 200, 1> GoL2;
@@ -266,25 +266,36 @@ namespace Renderer
 		axisVAO->Unbind();
 	}
 
+
 	Pipeline* GetPipeline()
 	{
 		return &pipeline;
 	}
+
 
 	CAInterface* GetAutomaton()
 	{
 		return automaton;
 	}
 
+
 	void SetAutomatonIndex(int index)
 	{
 		automataIndex = index;
 		automaton = automataList[index];
+		automaton->Init();
 	}
+
 
 	int GetAutomatonIndex()
 	{
 		return automataIndex;
+	}
+
+
+	float& GetUpdateFrequencyRef()
+	{
+		return updateFrequency;
 	}
 
 

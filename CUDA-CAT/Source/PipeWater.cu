@@ -370,6 +370,16 @@ void PipeWater<X, Y, Z>::Render()
 			//}
 			cudaCheck(cudaGraphicsUnmapResources(1, &imageResource, 0));
 		}
+		if (ImGui::Button("Random Splash"))
+		{
+			SplashArgs sp = splash;
+			sp.pos = { Utils::get_random(0, X), Utils::get_random(0, Z) };
+			cudaCheck(cudaGraphicsMapResources(1, &imageResource, 0));
+			cudaCheck(cudaGraphicsSubResourceGetMappedArray(&arr, imageResource, 0, 0));
+			cudaCheck(cudaBindSurfaceToArray(surfRef, arr));
+			perturbGrid<X, Y, Z><<<numBlocks, blockSize>>>(sp);
+			cudaCheck(cudaGraphicsUnmapResources(1, &imageResource, 0));
+		}
 		ImGui::Separator();
 		ImGui::Text("Splash Settings");
 		ImGui::InputFloat2("Location", &splash.pos[0]);

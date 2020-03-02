@@ -20,8 +20,10 @@ namespace Renderer
 	// debug
 	void drawAxisIndicators();
 
+	// CA stuff
 	Pipeline* GetPipeline();
 	CAInterface* GetAutomaton();
 	void SetAutomatonIndex(int index);
 	int GetAutomatonIndex();
+	float& GetUpdateFrequencyRef();
 }
