@@ -146,20 +146,17 @@
     <ClInclude Include="Engine\Source\load_image.h">
       <Filter>System</Filter>
     </ClInclude>
-    <ClInclude Include="Engine.h">
-      <Filter>Game</Filter>
-    </ClInclude>
     <ClInclude Include="Interface.h">
       <Filter>Game</Filter>
     </ClInclude>
     <ClInclude Include="Vertices.h">
       <Filter>Graphics</Filter>
     </ClInclude>
-    <ClInclude Include="Pipeline.h">
-      <Filter>Graphics</Filter>
-    </ClInclude>
     <ClInclude Include="Renderer.h">
       <Filter>Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Source\Engine.h">
+      <Filter>System</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -230,17 +227,14 @@
     <ClCompile Include="main.cpp">
       <Filter>System</Filter>
     </ClCompile>
-    <ClCompile Include="Engine.cpp">
-      <Filter>Game</Filter>
-    </ClCompile>
     <ClCompile Include="Interface.cpp">
       <Filter>Game</Filter>
     </ClCompile>
-    <ClCompile Include="Pipeline.cpp">
-      <Filter>Graphics</Filter>
-    </ClCompile>
     <ClCompile Include="Renderer.cpp">
       <Filter>Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Source\Engine.cpp">
+      <Filter>System</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
