@@ -199,7 +199,7 @@ copy "$(SolutionDir)lib\freetype\lib\win32\freetype.dll" "$(TargetDir)freetype.d
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <OpenMPSupport>true</OpenMPSupport>
+      <OpenMPSupport>false</OpenMPSupport>
       <AdditionalOptions>/Zc:twoPhase- %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
@@ -272,6 +272,10 @@ copy "$(SolutionDir)lib\CUDA\cudart64_102.dll" "$(TargetDir)cudart64_102.dll" /Y
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../../stdafx.h</PrecompiledHeaderFile>
     </ClCompile>
     <ClCompile Include="Engine\Source\mesh.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../../stdafx.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <ClCompile Include="Engine\Source\Pipeline.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../../stdafx.h</PrecompiledHeaderFile>
     </ClCompile>
@@ -376,6 +380,7 @@ copy "$(SolutionDir)lib\CUDA\cudart64_102.dll" "$(TargetDir)cudart64_102.dll" /Y
     <ClInclude Include="Engine\Source\math_utils.h" />
     <ClInclude Include="Engine\Source\mesh.h" />
     <ClInclude Include="Engine\Source\misc_utils.h" />
+    <ClInclude Include="Engine\Source\Pipeline.h" />
     <ClInclude Include="Engine\Source\shader.h" />
     <ClInclude Include="Engine\Source\sys_window.h" />
     <ClInclude Include="Engine\Source\texture.h" />

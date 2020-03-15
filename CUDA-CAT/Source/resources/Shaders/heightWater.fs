@@ -82,7 +82,7 @@ void main()
 
 	vec3 phongColor = CalcDirLight(sun, normal, viewDir);
 	vec3 envColor = CalcEnvColor(normal, viewDir);
-	vec3 finalColor = mix(phongColor, envColor, .98);
+	vec3 finalColor = mix(phongColor, envColor, .999);
 
 	FragColor = vec4(finalColor, 1.0);
 }
