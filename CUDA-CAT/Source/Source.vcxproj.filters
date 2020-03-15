@@ -245,6 +245,9 @@
     <ClCompile Include="Engine\Source\Pipeline.cpp">
       <Filter>Engine</Filter>
     </ClCompile>
+    <ClCompile Include="Engine\Source\Frustum.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="GoL.cu">

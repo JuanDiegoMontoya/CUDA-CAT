@@ -1,11 +1,8 @@
 #include "stdafx.h"
 
-#include "Pipeline.h"
 #include "Engine.h"
 #include "Renderer.h"
 #include "Interface.h"
-
-GLFWwindow* win = nullptr;
 
 int main()
 {
